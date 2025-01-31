@@ -4,22 +4,17 @@ import numpy as np
 import torch.nn as nn
 #from transformers import BertTokenizer, BertModel
 from transformers import AutoTokenizer, AutoModelForCausalLM, GPT2TokenizerFast
-from transformers import GPT2Tokenizer, GPT2LMHeadModel
-#from transformers import GPT2Model, GPT2Tokenizer
-#from torch.utils.data import DataLoader
 from datasets import Dataset 
 from torch.utils.data import random_split
 from transformers import  TrainingArguments, Trainer
-from transformers.integrations import NeptuneCallback
-import neptune
+#from transformers.integrations import NeptuneCallback
+#import neptune
 import torch.nn.functional as F
-from transformers import AutoModelForSeq2SeqLM
 from torch import float16
 import os
-from torch.utils.data import DataLoader, ConcatDataset
-from datasets import load_dataset, concatenate_datasets
+from torch.utils.data import ConcatDataset
 from tqdm import tqdm
-import argparse
+#import argparse
 from tok_and_align import tokenize_and_align_labels_m
 from utils import get_dataset
 #from sklearn.metrics import precision_recall_fscore_support, accuracy_score
@@ -225,11 +220,10 @@ if __name__ == "__main__":
     #tokenizer = AutoTokenizer.from_pretrained(checkpoint,torch_dtype=float16,device_map="auto")
     #decoder = GPT2LMHeadModel.from_pretrained("gpt2")
     #decoder = AutoModelForSeq2SeqLM.from_pretrained(checkpoint)
-    print("loading ",model_name)
+    print("tokenizer loading ",model_name)
     if model_name == "gemma":
         tokenizer = AutoTokenizer.from_pretrained("google/gemma-2b")
-        if train:
-            decoder = AutoModelForCausalLM.from_pretrained("google/gemma-2b", device_map="auto")
+            
 
     if model_name == "gpt2":
         #tokenizer = AutoTokenizer.from_pretrained("gpt2")
@@ -270,9 +264,8 @@ if __name__ == "__main__":
     
 
     if train: 
-        print("start to train")
+        
 
-        model = proj_decoder(decoder, sed_len, emb_size,freeze).to(device)
         #neptune_callback = NeptuneCallback(
         #    project="naiina/animacy-next-word-surprisal",
         #    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzllNjM4MS0zYjBhLTQwNGUtOGM3Mi1hYjE3ZTVjOWVjMTgifQ==", 
@@ -284,14 +277,22 @@ if __name__ == "__main__":
         for elem in os.listdir(tok_folder):
             lang = elem[:2]
             if "train" in elem:
-                data = torch.load(tok_folder+elem,map_location=device)
+                data = torch.load(tok_folder+elem,map_location=device,weights_only=False)
                 l_train.append(data)
             if "val" in elem:
-                data = torch.load(tok_folder+elem,map_location=device)
+                data = torch.load(tok_folder+elem,map_location=device,weights_only=False)
                 d_val[lang] = data
         train_dataset = ConcatDataset(l_train)
         print("datasets cats")
+        
+        print("start to load ",model_name)
+        if model_name == "gemma":
+            decoder = AutoModelForCausalLM.from_pretrained("google/gemma-2b", device_map="auto")
+        if model_name == "gpt2":
+            decoder = AutoModelForCausalLM.from_pretrained("gpt2", device_map="auto")
 
+        model = proj_decoder(decoder, sed_len, emb_size,freeze).to(device)
+        print("start to train")
         # Define Trainer
         trainer = Trainer(
             model=model,

@@ -15,15 +15,8 @@ import os
 #from datasets import load_dataset
 from datasets import Dataset, DatasetDict
 import numpy as np
-from sft import SFT
+
 import math as m
-from termcolor import colored
-#from transformers import (
-#    AutoModelForTokenClassification,
-##    AutoTokenizer,
-#    AutoModelForSeq2SeqLM, 
-#    Text2TextGenerationPipeline
-#)
 import torch
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -82,8 +75,8 @@ else:
 
 
 
-def find_roots(l,pro,deprel,defin = False):
-    l_deprel = ("csubj","xcomp","ccomp","acl","parataxis")
+def find_roots(l,pro,defin = False):
+    l_deprel = ("csubj","xcomp","ccomp","acl","parataxis","acl:relcl")
     l_waiting = []
     d_roots = {}
     l_det = {"head":[],"def":[]}
@@ -186,7 +179,7 @@ def create_subtrees_lists(l,pro,deprel = False,direct_arg_only = False, defin = 
     l_waiting_is_verb = []
     l_det = {"head":[],"def":[]}
     # get roots of each subtree
-    d_subtrees,l_tree_roots_idx = find_roots(l,pro,deprel,defin)
+    d_subtrees,l_tree_roots_idx = find_roots(l,pro,defin)
 
     l_gram = ["obj","nsubj"]
     if iobj:
@@ -370,14 +363,8 @@ def create_csv(UD_file,max_len):
         #print(text)
         l = list(elem)
         d_subtrees = create_subtrees_lists(l,False,True,True)
-        #print(d_subtrees.keys())
-        #exit()
         
         for idx_clause, (k,(li,la,lg,l4,ld)) in enumerate(d_subtrees.items()):
-            #zipped = list(zip(li,la,lg,ld))
-            #z_sorted = sorted(zipped, key = lambda x: x[0])
-            #print(z_sorted)
-            #exit()
             li_sort = li.copy()
             li_sort.sort()
             l_idx_main_arg = [li[i] for i in l4]
@@ -448,7 +435,42 @@ def create_csv(UD_file,max_len):
     df.to_csv('csv/'+UD_file[19:21]+'.csv', index=False)
 
     
+def acl_roots(UD_file,max_len):
+    data_UD = open(UD_file,"r", encoding="utf-8")
+    dd_data_UD = parse(data_UD.read())
+    l_anim_rel = []
+    for i,elem in enumerate(tqdm(dd_data_UD)):
+        if max_len >0:
+            if i >max_len:
+                break
+        text = elem.metadata['text']
+        print(text)
+        l = list(elem)
+        d_subtrees,l_tree_roots_idx = find_roots(l,True,False)
+        l_acl_roots_idx = []
+        for k,v in d_subtrees.items():
+            print (k,v)
+            if v[2][0] in ["acl","acl:relcl"]:
+                l_acl_roots_idx.append(v[0][0])
+        l_head_acl = []
+        d_nouns_id_anim = {}
+        #find head of roots with acl
+        #find anim of nouns of those roots if any
+        
+        for d_word in l: #get elems with id being 
+            if d_word["upos"] == "NOUN":
+                d_nouns_id_anim[d_word["id"]] = d_word["misc"]["ANIMACY"]
+            if d_word["id"] in l_acl_roots_idx:
+                l_head_acl.append(d_word["head"])
+        for elem in l_head_acl:
+            if elem in d_nouns_id_anim.keys():
+                l_anim_rel.append(d_nouns_id_anim[elem])
 
+        print("d_noun",d_nouns_id_anim)
+        print("l_head",l_head_acl)
+        print("acl_idx", l_acl_roots_idx)
+        print(l_anim_rel)
+    
 
 class Word:
     #the voice is only set for subjects
@@ -860,7 +882,6 @@ def filter_diff_anim(l,tag):
         only_two_enties_diff_anim = True  
     if len(set(mem))>1:
         sev_anim = True
-    #exit()
     if tag == "exactly_two_diff_anim":
         return only_two_enties_diff_anim
     if tag == "several_anim":
@@ -1237,7 +1258,6 @@ def rank_in_subtree_entropy(which_clauses,max_len=-1,tag = "all",pro = True):
         lang = file[:2]
         d_permut = permut_rank_in_subtree(UD_file,tup_to_consider,which_clauses,max_len,tag,pro)
         print(d_permut)
-        #exit()
         for tup, dd_perm  in d_permut.items():
             print(dd_perm)
             if len(dd_perm)>1:
@@ -1285,7 +1305,6 @@ def animacy_and_voice(UD_file,max_len,diff_anim=False,exactly_two=False):
                     if anim != None:
                         #print((voice,l_anim[elem],l_gram[elem]))
                         d_voice[l_gram[elem]][l_anim[elem]]+=1
-                #exit()
     
     np_count_agent = np.array([list(d_voice["nsubj"].values()),list(d_voice["obl:agent"].values())])
     np_count_patient = np.array([list(d_voice["nsubj:pass"].values()),list(d_voice["obj"].values())])
@@ -1563,8 +1582,6 @@ def plot_pos_subtree_mean(rel,tag_anim,anim_or_def="anim"):
             if file[:2] in ["en","it","es","de","fr","nl"]:
 
                 for elem,v in d_pos_defin.items():
-                    #print(elem,v)
-                    #exit()
                     d["mean"].append(np.mean(v))
                     d["language"].append(file[:2])
                     d["definiteness"].append(elem)
@@ -1695,7 +1712,6 @@ def plot_pos_subtree_anim_def(rel,which_clauses,size,tag,pro,defin):
             UD_file = "UD_with_anim_annot/"+file
             d_pos_anim,d_pos_defin,d_pos_anim_defin = position_in_subtree(UD_file,rel,which_clauses,size,tag,pro,defin)
             print(d_pos_anim_defin.keys())
-            #exit()
             d["mean"].append(np.mean(d_pos_anim["H"]))
             d["language"].append(file[:2])
             d["animacy"].append("Human")
@@ -1914,7 +1930,7 @@ def line_plot_pos(UD_folder,rel):
     plt.show()
 
 
-UD_file = "UD_with_anim_annot/fr_gsd-ud-train.conllu"
+#UD_file = "UD_with_anim_annot/fr_gsd-ud-train.conllu"
 UD_file_ner = "UD_with_anim_ner_annot/fr_gsd-ud-train.conllu"
 #UD_file = "UD_with_anim_annot/nl_alpino-ud-train.conllu"
 
@@ -1937,11 +1953,11 @@ UD_file_ner = "UD_with_anim_ner_annot/fr_gsd-ud-train.conllu"
 
 
 
-rel = False
-#d = noun_only_position_in_subtree(UD_file_ner,rel,max_len=-1)
+#rel = False
+#d = noun_only_position_in_subtree(UD_file_ner,rel,max_len=5)
 #print(d)
-line_plot_pos("UD_with_anim_ner_annot/",rel)
+#line_plot_pos("UD_with_anim_ner_annot/",rel)
 
-
+acl_roots(UD_file_ner,15)
 
 #find_ner_tags(UD_file_ner,-1)
