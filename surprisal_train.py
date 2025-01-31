@@ -20,6 +20,8 @@ from torch.utils.data import DataLoader, ConcatDataset
 from datasets import load_dataset, concatenate_datasets
 from tqdm import tqdm
 import argparse
+from tok_and_align import tokenize_and_align_labels_m
+from utils import get_dataset
 #from sklearn.metrics import precision_recall_fscore_support, accuracy_score
 
 
@@ -32,15 +34,14 @@ print("gemma padds with zeros at the begining")
 print("gpt2 padds with 50256 at the end")
 
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--lang', type=str,default="en")
+#parser = argparse.ArgumentParser()
+#parser.add_argument('--lang', type=str,default="en")
+#args = parser.parse_args()
+#lang = args.lang
+#print(lang)
 
-args = parser.parse_args()
-lang = args.lang
-print(lang)
-
-train = False
-save_dataset = True
+train = True
+save_dataset = False
 output_dir = "surprisal_train_test"
 model_name = "gemma"
 debug = False
@@ -80,7 +81,7 @@ def get_dataloaders_text(json_file):
     return train_dataset, test_dataset
 
 
-def tokenize_and_align_labels(dataset,tokenizer):
+def tokenize_and_align_labels_old(dataset,tokenizer):
     #l_anim: 0 if the following token isn't a noun, 1,2,3 if the animacy label is 0,1,2
     # aka the animacy tokens are shifted by one
 
@@ -214,7 +215,8 @@ if __name__ == "__main__":
     #lang = "en"
     #anim_word_list_json = "json/surprisal_text_labels_"+lang+".json"
     #json_folder = "all_datasets/json/"
-    tok_folder = "full_datasets/tok/"
+    tok_folder = "full_datasets/tok_datasets/"
+    json_tok_folder = "full_datasets/tok_dict/"
 
     sed_len= 88
     emb_size = 768
@@ -243,31 +245,38 @@ if __name__ == "__main__":
    
 
     #l_lang = ["en","fr","de","ja","nl","ko","es","it","eu","et","sl","hr","da","ca","bg","gl","hu","zh"]
-    #l_lang = ["de","ja","nl","es","it","sl","fr"]
+    l_lang = ["en","de","ja","nl","es","it","sl","fr"]
 
     if save_dataset:
-        #for lang in l_lang:
-        print("process dataset of lang ", lang)
-        dataset = load_dataset(f'lingvenvist/animacy-{lang}-nogroups-xtr-complete-filtered-fixed')
-        train_dataset = tokenize_and_align_labels(dataset["train"],tokenizer)
-        torch.save(train_dataset, tok_folder+lang+"_train_dataset.pth")
-        print("train tok done")
-        val_dataset = tokenize_and_align_labels(dataset["validation"],tokenizer)
-        torch.save(val_dataset, tok_folder+lang+"_val_dataset.pth")
-        print("val tok done")
-        test_dataset = tokenize_and_align_labels(dataset["test"],tokenizer)
-        torch.save(test_dataset, tok_folder+lang+"_test_dataset.pth")
-        print("test tok done")
+        for lang in l_lang:
+            print("process dataset of lang ", lang)
+            #dataset = load_dataset(f'lingvenvist/animacy-{lang}-nogroups-xtr-complete-filtered-fixed')
+            dataset = get_dataset(lang)
+
+            d_train_dataset = tokenize_and_align_labels_m(dataset["train"],tokenizer)
+            train_dataset =  Dataset.from_dict(d_train_dataset).with_format("torch")
+            torch.save(train_dataset, tok_folder+lang+"_train_dataset.pth")
+            print("train tok done")
+
+            d_val_dataset = tokenize_and_align_labels_m(dataset["validation"],tokenizer)
+            val_dataset =  Dataset.from_dict(d_val_dataset).with_format("torch")
+            torch.save(val_dataset, tok_folder+lang+"_val_dataset.pth")
+            print("val tok done")
+
+            d_test_dataset = tokenize_and_align_labels_m(dataset["test"],tokenizer)
+            test_dataset =  Dataset.from_dict(d_test_dataset).with_format("torch")
+            torch.save(test_dataset, tok_folder+lang+"_test_dataset.pth")
+            print("test tok done")
     
 
     if train: 
         print("start to train")
 
         model = proj_decoder(decoder, sed_len, emb_size,freeze).to(device)
-        neptune_callback = NeptuneCallback(
-            project="naiina/animacy-next-word-surprisal",
-            api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzllNjM4MS0zYjBhLTQwNGUtOGM3Mi1hYjE3ZTVjOWVjMTgifQ==", 
-        )
+        #neptune_callback = NeptuneCallback(
+        #    project="naiina/animacy-next-word-surprisal",
+        #    api_token="eyJhcGlfYWRkcmVzcyI6Imh0dHBzOi8vYXBwLm5lcHR1bmUuYWkiLCJhcGlfdXJsIjoiaHR0cHM6Ly9hcHAubmVwdHVuZS5haSIsImFwaV9rZXkiOiI5YzllNjM4MS0zYjBhLTQwNGUtOGM3Mi1hYjE3ZTVjOWVjMTgifQ==", 
+        #)
 
         l_train = []
         d_val = {}
@@ -281,6 +290,7 @@ if __name__ == "__main__":
                 data = torch.load(tok_folder+elem,map_location=device)
                 d_val[lang] = data
         train_dataset = ConcatDataset(l_train)
+        print("datasets cats")
 
         # Define Trainer
         trainer = Trainer(
@@ -288,7 +298,7 @@ if __name__ == "__main__":
             args=training_args,
             train_dataset=train_dataset,
             eval_dataset=d_val,
-            callbacks=[neptune_callback],
+            #callbacks=[neptune_callback],
             compute_loss_func = loss_fn,
             #compute_metrics = compute_metrics
             
@@ -299,9 +309,9 @@ if __name__ == "__main__":
         trainer.evaluate()
         #trainer.save_model("path_to_save")
         if freeze:
-            torch.save(model, 'model_freezed.pth')
+            torch.save(model, 'models/model_freezed.pth')
         else:
-            torch.save(model, 'model_all_wieghts_trained.pth')
+            torch.save(model, 'models/model_all_wieghts_trained.pth')
         #neptune_run.stop()
 
 
