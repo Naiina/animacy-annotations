@@ -6,7 +6,7 @@ from transformers import AutoTokenizer
 # Enable or disable debug mode
 debug = False  # Set to False to suppress debug prints
 
-def tokenize_and_align_labels_m(dataset, tokenizer):
+def tokenize_and_align_labels_m(dataset, tokenizer,padd_len=325):
     """
     Tokenizes the dataset and aligns token labels while preserving word-to-token mapping.
 
@@ -32,8 +32,9 @@ def tokenize_and_align_labels_m(dataset, tokenizer):
     # Tokenize all sentences while maintaining word alignment
     tokenized_data = tokenizer(
         [entry["tokens"] for entry in dataset],
-        padding=True,
-        is_split_into_words=True
+        is_split_into_words=True,
+        padding='max_length', 
+        max_length=padd_len
     )
 
     # Debug: Show tokenization output

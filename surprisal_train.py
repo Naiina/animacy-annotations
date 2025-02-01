@@ -41,6 +41,7 @@ output_dir = "surprisal_train_test"
 model_name = "gemma"
 debug = False
 freeze = True
+padd_size = 325 
 
 def get_dataloaders_emb(json_file):
 
@@ -170,9 +171,8 @@ training_args = TrainingArguments(
 
 
 class proj_decoder(nn.Module):
-    def __init__(self,model, seq_len, emb_size,freeze = True):
+    def __init__(self,model, emb_size,freeze = True):
         super(proj_decoder, self).__init__()
-        self.seq_len = seq_len
         self.emb_size = emb_size
         self.decoder = model
         self.word_embeddings = self.decoder.get_input_embeddings()
@@ -213,8 +213,7 @@ if __name__ == "__main__":
     tok_folder = "full_datasets/tok_datasets/"
     json_tok_folder = "full_datasets/tok_dict/"
 
-    sed_len= 88
-    emb_size = 768
+    
 
     #checkpoint = "CohereForAI/aya-101"
     #tokenizer = AutoTokenizer.from_pretrained(checkpoint,torch_dtype=float16,device_map="auto")
@@ -247,17 +246,17 @@ if __name__ == "__main__":
             #dataset = load_dataset(f'lingvenvist/animacy-{lang}-nogroups-xtr-complete-filtered-fixed')
             dataset = get_dataset(lang)
 
-            d_train_dataset = tokenize_and_align_labels_m(dataset["train"],tokenizer)
+            d_train_dataset = tokenize_and_align_labels_m(dataset["train"],tokenizer,padd_size)
             train_dataset =  Dataset.from_dict(d_train_dataset).with_format("torch")
             torch.save(train_dataset, tok_folder+lang+"_train_dataset.pth")
             print("train tok done")
 
-            d_val_dataset = tokenize_and_align_labels_m(dataset["validation"],tokenizer)
+            d_val_dataset = tokenize_and_align_labels_m(dataset["validation"],tokenizer,padd_size)
             val_dataset =  Dataset.from_dict(d_val_dataset).with_format("torch")
             torch.save(val_dataset, tok_folder+lang+"_val_dataset.pth")
             print("val tok done")
 
-            d_test_dataset = tokenize_and_align_labels_m(dataset["test"],tokenizer)
+            d_test_dataset = tokenize_and_align_labels_m(dataset["test"],tokenizer,padd_size)
             test_dataset =  Dataset.from_dict(d_test_dataset).with_format("torch")
             torch.save(test_dataset, tok_folder+lang+"_test_dataset.pth")
             print("test tok done")
@@ -291,7 +290,11 @@ if __name__ == "__main__":
         if model_name == "gpt2":
             decoder = AutoModelForCausalLM.from_pretrained("gpt2", device_map="auto")
 
-        model = proj_decoder(decoder, sed_len, emb_size,freeze).to(device)
+        if model_name == "gemma":
+            emb_size = 2048
+        if model_name == "gpt2":
+            emb_size = 768
+        model = proj_decoder(decoder, emb_size,freeze).to(device)
         print("start to train")
         # Define Trainer
         trainer = Trainer(
