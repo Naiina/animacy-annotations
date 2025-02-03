@@ -434,42 +434,127 @@ def create_csv(UD_file,max_len):
     #print(UD_file)
     df.to_csv('csv/'+UD_file[19:21]+'.csv', index=False)
 
-    
 def acl_roots(UD_file,max_len):
     data_UD = open(UD_file,"r", encoding="utf-8")
     dd_data_UD = parse(data_UD.read())
-    l_anim_rel = []
+    l_anim = []
+    d_tot = {"P":0,"H":0,"A":0,"N":0,"PER":0}
+    
     for i,elem in enumerate(tqdm(dd_data_UD)):
         if max_len >0:
             if i >max_len:
                 break
         text = elem.metadata['text']
-        print(text)
+        #print(text)
+        l = list(elem)
+        d_acl_idx_h = {}
+        d_aclrel_idx_h = {}
+        d_noun_idx_anim = {}
+        l_pronoun_rel_h = []
+        for d_word in l: 
+            h = d_word["head"] 
+            if type(d_word["feats"]) == dict and "PronType" in d_word["feats"].keys() and "Rel" in d_word["feats"]["PronType"]:
+                l_pronoun_rel_h.append(h)
+            if d_word["deprel"] == "acl":
+                d_acl_idx_h[d_word["id"]] = h
+            if d_word["deprel"] == "acl:relcl":
+                d_aclrel_idx_h[d_word["id"]] = h
+
+            if d_word["upos"] == "NOUN":
+                anim = d_word["misc"]["ANIMACY"]
+                d_noun_idx_anim[d_word["id"]] = anim
+                if anim in ["A","N","P","H"]:
+                    d_tot[d_word["misc"]["ANIMACY"]]+=1
+            if "PRON" == d_word["upos"] and type(d_word["feats"]) == dict and "Person" in d_word["feats"] and d_word["feats"]["Person"] in ["1","2"]:
+                d_noun_idx_anim[d_word["id"]] = "P"
+                d_tot["P"]+=1
+            if "PROPN" == d_word["upos"]:
+                ner = d_word["misc"]["NER"]
+                if ner in ["PER","PERSON"]:
+                    d_noun_idx_anim[d_word["id"]] = "PER"
+                    d_tot["PER"]+=1
+        #print("l_pron",l_pronoun_rel_h)
+        #print("acl rel",d_aclrel_idx_h)
+        #print("acl", d_acl_idx_h)
+        #print("noun",d_noun_idx_anim)
+                    
+        for h_acl_rel in d_aclrel_idx_h.values():
+            if h_acl_rel in d_noun_idx_anim.keys():
+                l_anim.append(d_noun_idx_anim[h_acl_rel])
+                #print("h_acl_rel",h_acl_rel)
+        for h_pro in l_pronoun_rel_h:
+            if h_pro in d_acl_idx_h.keys():
+                h_acl = d_acl_idx_h[h_pro]
+                if h_acl in d_noun_idx_anim.keys():
+                    l_anim.append(d_noun_idx_anim[h_acl])
+        if "sl_" in UD_file:
+            for h_acl in d_acl_idx_h.values():
+                if h_acl in d_noun_idx_anim.keys():
+                    l_anim.append(d_noun_idx_anim[h_acl])
+
+                    #print("h_pro",h_pro,"h_acl",h_acl)
+        #print(l_anim)
+
+    return l_anim,d_tot
+
+
+def acl_roots_old(UD_file,max_len):
+    data_UD = open(UD_file,"r", encoding="utf-8")
+    dd_data_UD = parse(data_UD.read())
+    l_anim_rel = []
+    d_tot = {"P":0,"H":0,"A":0,"N":0,"PER":0}
+    for i,elem in enumerate(tqdm(dd_data_UD)):
+        if max_len >0:
+            if i >max_len:
+                break
+        text = elem.metadata['text']
+        #print(text)
         l = list(elem)
         d_subtrees,l_tree_roots_idx = find_roots(l,True,False)
+        l_acl_rel_roots_idx = []
         l_acl_roots_idx = []
+        l_pron_head = []
         for k,v in d_subtrees.items():
-            print (k,v)
-            if v[2][0] in ["acl","acl:relcl"]:
+            #print (k,v)
+            #if v[2][0] in ["acl","acl:relcl"]:
+            if v[2][0] in ["acl:relcl"]:
+                l_acl_rel_roots_idx.append(v[0][0])
+            if v[2][0] in ["acl"]:
                 l_acl_roots_idx.append(v[0][0])
         l_head_acl = []
         d_nouns_id_anim = {}
         #find head of roots with acl
         #find anim of nouns of those roots if any
-        
+        print(d_subtrees)
+        print(l_acl_roots_idx,l_acl_rel_roots_idx)
+        pass
         for d_word in l: #get elems with id being 
             if d_word["upos"] == "NOUN":
-                d_nouns_id_anim[d_word["id"]] = d_word["misc"]["ANIMACY"]
+                anim = d_word["misc"]["ANIMACY"]
+                d_nouns_id_anim[d_word["id"]] = anim
+                if anim in ["A","N","P","H"]:
+                    d_tot[d_word["misc"]["ANIMACY"]]+=1
+            if "PRON" == d_word["upos"] and type(d_word["feats"]) == dict and "Person" in d_word["feats"] and d_word["feats"]["Person"] in ["1","2"]:
+                d_nouns_id_anim[d_word["id"]] = "P"
+                d_tot["P"]+=1
+            if "PROPN" == d_word["upos"]:
+                ner = d_word["misc"]["NER"]
+                if ner in ["PER","PERSON"]:
+                    d_nouns_id_anim[d_word["id"]] = "PER"
+                    d_tot["PER"]+=1
+
+
             if d_word["id"] in l_acl_roots_idx:
                 l_head_acl.append(d_word["head"])
         for elem in l_head_acl:
             if elem in d_nouns_id_anim.keys():
                 l_anim_rel.append(d_nouns_id_anim[elem])
 
-        print("d_noun",d_nouns_id_anim)
-        print("l_head",l_head_acl)
-        print("acl_idx", l_acl_roots_idx)
-        print(l_anim_rel)
+        #print("d_noun",d_nouns_id_anim)
+        #print("l_head",l_head_acl)
+        #print("acl_idx", l_acl_roots_idx)
+        #print(l_anim_rel)
+    return l_anim_rel,d_tot
     
 
 class Word:
@@ -1287,9 +1372,11 @@ def animacy_and_voice(UD_file,max_len,diff_anim=False,exactly_two=False):
             break
         
         text = elem.metadata['text']
+        #print(text)
         l = list(elem)
         d_subtrees = create_subtrees_lists(l,False,True,True,passive=True)
-        for (verb,voice),[l_pos,l_anim,l_gram,ldir_arg,ld] in d_subtrees.items():
+        #print(d_subtrees)
+        for (verb,voice,w,x),[l_pos,l_anim,l_gram,ldir_arg,ld] in d_subtrees.items():
             to_add = True
             l_anim_no_none = [l_anim[elem] for elem in ldir_arg if l_anim[elem]!=None]
             
@@ -1305,9 +1392,12 @@ def animacy_and_voice(UD_file,max_len,diff_anim=False,exactly_two=False):
                     if anim != None:
                         #print((voice,l_anim[elem],l_gram[elem]))
                         d_voice[l_gram[elem]][l_anim[elem]]+=1
+        #print(d_voice)
+        #print("\n")
     
     np_count_agent = np.array([list(d_voice["nsubj"].values()),list(d_voice["obl:agent"].values())])
     np_count_patient = np.array([list(d_voice["nsubj:pass"].values()),list(d_voice["obj"].values())])
+    print(d_voice)
     return d_voice,np_count_agent,np_count_patient
 
 
@@ -1929,9 +2019,74 @@ def line_plot_pos(UD_folder,rel):
     plt.grid(True)
     plt.show()
 
+def plot_acl(UD_folder,max_len=-1):
+    d = {}
+    for file in os.listdir(UD_folder):
+        lang = file[:2]
+        print(lang)
+        UD_file_ner = UD_folder+file
+        l,d_tot = acl_roots(UD_file_ner,max_len)
+        
+        #s = set(l)
+        #print(l,d_tot)
+        d[lang] = {elem: l.count(elem)/d_tot[elem] for elem in ["H","A","N","P","PER"] if d_tot[elem]>0}
+
+
+    print(d)
+    df = pd.DataFrame(d)
+    
+    #df.loc[["H","A","P", "N"]] = df.loc[["H","A","N", "P"]].values
+    df.to_csv("anim_acl_rel_pron.csv")
+    print(df)
+
+    df.plot(marker='o', figsize=(8, 5))
+   
+    #plt.title("Values of A, B, and C for Each Language")
+    plt.xlabel("Language")
+    plt.ylabel("count")
+    plt.legend(title="Metrics")
+    plt.grid(True)
+    plt.show()
+
+
+def plot_subj_ratio(UD_folder,max_len=-1):
+    d_ratio = {}
+    for file in os.listdir(UD_folder):
+        lang = file[:2]
+        print(lang)
+        UD_file_ner = UD_folder+file
+        d_count , a,b = animacy_and_voice(UD_file_ner,-1,diff_anim=False,exactly_two=False)
+        nb_N = sum([d["N"] for d in d_count.values()])
+        nb_H = sum([d["H"] for d in d_count.values()])
+        print("nb:",nb_N,nb_H)
+        d_ratio[lang] = {"h_patient": (d_count["nsubj:pass"]["H"]/nb_H)/(d_count["nsubj"]["N"]/nb_N+d_count["nsubj:pass"]["H"]/nb_H), "n_patient": (d_count["nsubj:pass"]["N"]/nb_N)/(d_count["nsubj"]["H"]/nb_H+d_count["nsubj:pass"]["N"]/nb_N)}
+        
+        #s = set(l)
+        #print(l,d_tot)
+        #d[lang] = {elem: l.count(elem)/d_tot[elem] for elem in ["H","A","N","P","PER"] if d_tot[elem]>0}
+
+
+    print(d_ratio)
+    df = pd.DataFrame(d_ratio)
+    
+    #df.loc[["H","A","P", "N"]] = df.loc[["H","A","N", "P"]].values
+    df.to_csv("anim_voice_ratio")
+    print(df)
+
+    df.plot(marker='o', figsize=(8, 5))
+   
+    #plt.title("Values of A, B, and C for Each Language")
+    plt.xlabel("Language")
+    plt.ylabel("ratio")
+    plt.legend(title="Metrics")
+    plt.grid(True)
+    plt.show()
+
+
 
 #UD_file = "UD_with_anim_annot/fr_gsd-ud-train.conllu"
 UD_file_ner = "UD_with_anim_ner_annot/fr_gsd-ud-train.conllu"
+#UD_file_ner = "UD_with_anim_ner_annot/de_hdt-ud-test.conllu"
 #UD_file = "UD_with_anim_annot/nl_alpino-ud-train.conllu"
 
 
@@ -1958,6 +2113,8 @@ UD_file_ner = "UD_with_anim_ner_annot/fr_gsd-ud-train.conllu"
 #print(d)
 #line_plot_pos("UD_with_anim_ner_annot/",rel)
 
-acl_roots(UD_file_ner,15)
+#acl_roots(UD_file_ner,15)
+#plot_acl("UD_with_anim_ner_annot/",max_len=-1)
+#animacy_and_voice(UD_file_ner,10,diff_anim=False,exactly_two=False)
 
-#find_ner_tags(UD_file_ner,-1)
+plot_subj_ratio("UD_with_anim_ner_annot/",max_len=-1)
