@@ -2056,6 +2056,8 @@ def plot_subj_ratio(UD_folder,max_len=-1):
         print(lang)
         UD_file_ner = UD_folder+file
         d_count , a,b = animacy_and_voice(UD_file_ner,-1,diff_anim=False,exactly_two=False)
+        print(d_count)
+        #exit()
         nb_N = sum([d["N"] for d in d_count.values()])
         nb_H = sum([d["H"] for d in d_count.values()])
         print("nb:",nb_N,nb_H)
@@ -2081,6 +2083,38 @@ def plot_subj_ratio(UD_folder,max_len=-1):
     plt.legend(title="Metrics")
     plt.grid(True)
     plt.show()
+
+def plot_heatmap_voice(UD_folder,max_len):
+
+
+    def extract_proportions(d):
+        return {gram: anim_dict_count['H'] / sum(anim_dict_count.values()) if sum(anim_dict_count.values())>0 else np.nan for gram,anim_dict_count in d.items() }
+    d_heatmap_data={}
+    l_lang = []
+    for file in os.listdir(UD_folder):
+        lang = file[:2]
+        l_lang.append(lang)
+        print(lang)
+        UD_file_ner = UD_folder+file
+        d_count , a,b = animacy_and_voice(UD_file_ner,max_len,diff_anim=False,exactly_two=False)
+        print(d_count)
+        proportions = extract_proportions(d_count)
+        d_heatmap_data[lang] = proportions
+
+    df = pd.DataFrame(d_heatmap_data)
+    print(df)
+    i, j = 1, 2  # Swap Row2 and Row4
+    rows = df.iloc[[i, j]].copy()
+    # Swap values and index names
+    df.iloc[[j, i]] = rows.values
+    df.index.values[[i, j]] = df.index.values[[j, i]]
+    
+    print(df)
+    plt.figure(figsize=(8, 4))
+    sns.heatmap(df, annot=True, cmap="Blues")
+    plt.title("Proportion of humans")
+    plt.show()
+
 
 
 
@@ -2117,4 +2151,6 @@ UD_file_ner = "UD_with_anim_ner_annot/fr_gsd-ud-train.conllu"
 #plot_acl("UD_with_anim_ner_annot/",max_len=-1)
 #animacy_and_voice(UD_file_ner,10,diff_anim=False,exactly_two=False)
 
-plot_subj_ratio("UD_with_anim_ner_annot/",max_len=-1)
+#plot_subj_ratio("UD_with_anim_ner_annot/",max_len=-1)
+
+plot_heatmap_voice("UD_with_anim_ner_annot/",-1)
