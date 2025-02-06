@@ -23,53 +23,6 @@ import matplotlib.pyplot as plt
 from scipy.stats import chi2_contingency as chi2_contingency
 
 plt.rcParams['font.family'] = 'Times New Roman'
-#import torch.nn.functional as F
-
-parser = argparse.ArgumentParser()
-parser.add_argument('--lang', type=str)
-
-args = parser.parse_args()
-lang = args.lang
-
-
-l_lang = ["bm","bn","bxr","yue","zh","cs","myv","et","fo","de"] #"en","fr","eu","ar"
-#lang = "ar"
-#bm: only test file  
-#ar: The size of tensor a (716) must match the size of tensor b (512) at non-singleton dimension 1 at elem 15539
-#bn '../../ud-treebanks-v2.14/UD_Bengali-BRU/bn_bru-ud-train.conllu'
-#yue: No such file or directory: '../../ud-treebanks-v2.14/UD_Cantonese-HK/yue_hk-ud-train.conllu'
-
-
-
-dict_files = {"en":"UD_English-GUM/en_gum-ud-train.conllu",
-              "fr":"UD_French-GSD/fr_gsd-ud-dev.conllu",
-              "eu":"UD_Basque-BDT/eu_bdt-ud-train.conllu",
-              "ar":"UD_Arabic-NYUAD/ar_nyuad-ud-train.conllu",
-              "bm":"UD_Bambara-CRB/bm_crb-ud-test.conllu",
-              "bn":"UD_Bengali-BRU/bn_bru-ud-test.conllu",
-              "bxr":"UD_Buryat-BDT/bxr_bdt-ud-train.conllu",
-              "yue":"UD_Cantonese-HK/yue_hk-ud-test.conllu",
-              "zh":"UD_Chinese-GSD/zh_gsd-ud-train.conllu",
-              "cs":"UD_Czech-PDT/cs_pdt-ud-train.conllu",
-              "myv":"UD_Erzya-JR/myv_jr-ud-train.conllu",
-              "et":"UD_Estonian-EDT/et_edt-ud-train.conllu",
-              "fo":"UD_Faroese-FarPaHC/fo_farpahc-ud-train.conllu",
-              "de":"UD_German-HDT/de_hdt-ud-train.conllu",
-              "es": "UD_Spanish-AnCora/es_ancora-ud-train.conllu",
-              "ja": "UD_Japanese-GSD/ja_gsd-ud-train.conllu",
-              "ko": "UD_Korean-Kaist/ko_kaist-ud-train.conllu",
-              
-              }
-
-if lang == None:
-    UD_file = None
-else:
-    UD_file = "ud-treebanks-v2.14/"+dict_files[lang]
-    json_file = "UD_data_anim/UD_annot_data_"+lang+".json"
-    json_file_obl = "UD_data_anim/UD_annot_data_"+lang+"obl.json"
-    json_file_stats = "UD_data_anim/stats_"+lang+".json"
-    json_file_stats_obl = "UD_data_anim/stats_"+lang+"obl.json"
-
 
 
 
@@ -218,10 +171,13 @@ def create_subtrees_lists(l,pro,deprel = False,direct_arg_only = False, defin = 
             #    else:
             #        anim = "N"
                 
-            #if upos == "PROPN":
-            #    anim = d_word["misc"]["NER"]
-            #    if anim == "PERSON":
-            #        anim = "PER"
+            elif upos == "PROPN":
+                if "NER" in d_word["misc"].keys():
+                    anim = d_word["misc"]["NER"]
+                    if anim == "PERSON":
+                        anim = "PER"
+                else:
+                    anim = None
 
             elif pro and "PRON" == upos and type(d_word["feats"]) == dict and "Person" in d_word["feats"] and d_word["feats"]["Person"] in ["1","2"]:
                 anim = "P"
@@ -434,7 +390,12 @@ def create_csv(UD_file,max_len):
     #print(UD_file)
     df.to_csv('csv/'+UD_file[19:21]+'.csv', index=False)
 
-def acl_roots(UD_file,max_len):
+def acl_roots(UD_file,max_len,all_acl=False):
+    #acl:relcl for languages where this exists
+    #acl and pronType:Rel 
+    #acl for sl because none other indication exists
+
+    #if "all_acl":  all acl for all langauges 
     data_UD = open(UD_file,"r", encoding="utf-8")
     dd_data_UD = parse(data_UD.read())
     l_anim = []
@@ -465,14 +426,16 @@ def acl_roots(UD_file,max_len):
                 d_noun_idx_anim[d_word["id"]] = anim
                 if anim in ["A","N","P","H"]:
                     d_tot[d_word["misc"]["ANIMACY"]]+=1
-            if "PRON" == d_word["upos"] and type(d_word["feats"]) == dict and "Person" in d_word["feats"] and d_word["feats"]["Person"] in ["1","2"]:
+            elif "PRON" == d_word["upos"] and type(d_word["feats"]) == dict and "Person" in d_word["feats"] and d_word["feats"]["Person"] in ["1","2"]:
                 d_noun_idx_anim[d_word["id"]] = "P"
                 d_tot["P"]+=1
-            if "PROPN" == d_word["upos"]:
-                ner = d_word["misc"]["NER"]
-                if ner in ["PER","PERSON"]:
-                    d_noun_idx_anim[d_word["id"]] = "PER"
-                    d_tot["PER"]+=1
+            elif "PROPN" == d_word["upos"]:
+                if "NER" in d_word["misc"]:
+                    ner = d_word["misc"]["NER"]
+                    if ner in ["PER","PERSON"]:
+                        d_noun_idx_anim[d_word["id"]] = "PER"
+                        d_tot["PER"]+=1
+                #else:
         #print("l_pron",l_pronoun_rel_h)
         #print("acl rel",d_aclrel_idx_h)
         #print("acl", d_acl_idx_h)
@@ -487,116 +450,16 @@ def acl_roots(UD_file,max_len):
                 h_acl = d_acl_idx_h[h_pro]
                 if h_acl in d_noun_idx_anim.keys():
                     l_anim.append(d_noun_idx_anim[h_acl])
-        if "sl_" in UD_file:
+        if "sl_" in UD_file or all_acl or "eu_" in UD_file or all_acl:
             for h_acl in d_acl_idx_h.values():
                 if h_acl in d_noun_idx_anim.keys():
                     l_anim.append(d_noun_idx_anim[h_acl])
 
-                    #print("h_pro",h_pro,"h_acl",h_acl)
-        #print(l_anim)
 
     return l_anim,d_tot
 
 
-def acl_roots_old(UD_file,max_len):
-    data_UD = open(UD_file,"r", encoding="utf-8")
-    dd_data_UD = parse(data_UD.read())
-    l_anim_rel = []
-    d_tot = {"P":0,"H":0,"A":0,"N":0,"PER":0}
-    for i,elem in enumerate(tqdm(dd_data_UD)):
-        if max_len >0:
-            if i >max_len:
-                break
-        text = elem.metadata['text']
-        #print(text)
-        l = list(elem)
-        d_subtrees,l_tree_roots_idx = find_roots(l,True,False)
-        l_acl_rel_roots_idx = []
-        l_acl_roots_idx = []
-        l_pron_head = []
-        for k,v in d_subtrees.items():
-            #print (k,v)
-            #if v[2][0] in ["acl","acl:relcl"]:
-            if v[2][0] in ["acl:relcl"]:
-                l_acl_rel_roots_idx.append(v[0][0])
-            if v[2][0] in ["acl"]:
-                l_acl_roots_idx.append(v[0][0])
-        l_head_acl = []
-        d_nouns_id_anim = {}
-        #find head of roots with acl
-        #find anim of nouns of those roots if any
-        print(d_subtrees)
-        print(l_acl_roots_idx,l_acl_rel_roots_idx)
-        pass
-        for d_word in l: #get elems with id being 
-            if d_word["upos"] == "NOUN":
-                anim = d_word["misc"]["ANIMACY"]
-                d_nouns_id_anim[d_word["id"]] = anim
-                if anim in ["A","N","P","H"]:
-                    d_tot[d_word["misc"]["ANIMACY"]]+=1
-            if "PRON" == d_word["upos"] and type(d_word["feats"]) == dict and "Person" in d_word["feats"] and d_word["feats"]["Person"] in ["1","2"]:
-                d_nouns_id_anim[d_word["id"]] = "P"
-                d_tot["P"]+=1
-            if "PROPN" == d_word["upos"]:
-                ner = d_word["misc"]["NER"]
-                if ner in ["PER","PERSON"]:
-                    d_nouns_id_anim[d_word["id"]] = "PER"
-                    d_tot["PER"]+=1
-
-
-            if d_word["id"] in l_acl_roots_idx:
-                l_head_acl.append(d_word["head"])
-        for elem in l_head_acl:
-            if elem in d_nouns_id_anim.keys():
-                l_anim_rel.append(d_nouns_id_anim[elem])
-
-        #print("d_noun",d_nouns_id_anim)
-        #print("l_head",l_head_acl)
-        #print("acl_idx", l_acl_roots_idx)
-        #print(l_anim_rel)
-    return l_anim_rel,d_tot
     
-
-class Word:
-    #the voice is only set for subjects
-    def __init__(self, word,head, gram, id,sent_id,sent_len,anim=None,voice=None):
-        self.word = word
-        self.head = head
-        self.gram = gram
-        self.sent_id = sent_id
-        self.sent_len = sent_len
-        if type(id) == tuple: 
-            self.pos_in_sent = id[0]-1
-        else:
-            self.pos_in_sent = id-1
-        self.pos_aligned = -1
-        self.animacy = anim
-        #if gram != "verb":
-        #    tok,pred_lab = self.get_UD_info(d_data)
-        #    self.set_animacy(tok,pred_lab)
-        if gram == "subject":
-            self.voice = voice
-
-    def get_UD_info(self,d_data):
-        sent_id = self.sent_id
-        tok = d_data["tokens"][sent_id]
-        pred_lab = d_data["labels_pred"][sent_id]
-        return tok,pred_lab
-
-
-    #def set_animacy(self,tok,pred_lab):
-    #    d_id_2_lab = {2:"N",1:"H",0:"A"}
-    #    #tok,pred_lab = self.get_UD_info(d_data)
-    #    tokenized_inputs = tokenizer(tok,is_split_into_words=True)   
-    #    word_ids = tokenized_inputs.word_ids()
-    #    #print(tok,word_ids)
-    #    pos_al = word_ids.index(self.pos_in_sent)
-    #    self.pos_aligned = pos_al
-    #    self.animacy = d_id_2_lab[pred_lab[pos_al]]
-    def __str__(self):
-        return "word:"+str(self.word)+" head:"+str(self.head)+" anim:"+str(self.animacy)+" position_in_sent:"+str(self.pos_in_sent)+" aligned_pos:"+str(self.pos_aligned)+" sent_id:"+str(self.sent_id)
-
-     
 
 
 
@@ -657,7 +520,7 @@ def relative_order_MI(UD_file,max_len,Gram,direct_arg_only):
         
 
 
-def prop_sentences_only_one_anim(UD_file):
+def proportion_sentences_only_one_anim(UD_file):
 
     only_one_class = 0
     no_pron = 0
@@ -973,13 +836,18 @@ def filter_diff_anim(l,tag):
         return sev_anim
 
 
-def noun_only_position_in_subtree(UD_file,rel,max_len=-1,pro = True):
+def noun_only_position_in_subtree(UD_file,rel,max_len=-1,pro = True,per = True):
     # The cat of my sister plays with a ball
     #      1           2                  3 
     data_UD = open(UD_file,"r", encoding="utf-8")
     dd_data_UD = parse(data_UD.read())
-
-    d_pos_anim = {"P":[],"H":[],"A":[],"N":[]}
+    
+    l_tags = ["N","A","H"]
+    if pro:
+        l_tags.append("P")
+    if per:
+        l_tags.append("PER")
+    d_pos_anim = {"P":[],"H":[],"A":[],"N":[],"PER":[]}
     for i,elem in enumerate(tqdm(dd_data_UD)):
         if max_len >0:
             if i > max_len:
@@ -991,26 +859,20 @@ def noun_only_position_in_subtree(UD_file,rel,max_len=-1,pro = True):
 
         d_subtrees = create_subtrees_lists(l,pro,False)
         #print(d_subtrees)
-        
-        
+        pass
         for k,(li,la,lg,l4,ld) in d_subtrees.items():
-            subtree_len = len(li)
             zipped = list(zip(li,la))
             z_sorted = sorted(zipped, key = lambda x: x[0])
-            #print(z_sorted)
-            #pass
-            order = 0
-            dd_pos_anim = {"P":[],"H":[],"A":[],"N":[]}
+            pos = 0
+            dd_pos_anim = {"PER":[],"P":[],"H":[],"A":[],"N":[]}
             for ind, (idx,anim) in enumerate(z_sorted):
-                #if anim != None and :
-                if anim in ["N","A","H","P"]:
-                        
-                    dd_pos_anim[anim].append(order)
-                    order+=1
+                if anim in l_tags:
+                    dd_pos_anim[anim].append(pos)
+                    pos+=1
             if rel:
-                if order > 0:
+                if pos > 0:
                     for k in dd_pos_anim.keys():
-                        dd_pos_anim[k] = [elem/order for elem in dd_pos_anim[k]]
+                        dd_pos_anim[k] = [elem/pos for elem in dd_pos_anim[k]]
             for k in d_pos_anim.keys():
                 d_pos_anim[k] = d_pos_anim[k] + dd_pos_anim[k]
     for k in d_pos_anim.keys():
@@ -1361,11 +1223,11 @@ def rank_in_subtree_entropy(which_clauses,max_len=-1,tag = "all",pro = True):
     return df
 
 
-def animacy_and_voice(UD_file,max_len,diff_anim=False,exactly_two=False):
+def animacy_and_voice(UD_file,max_len):
     data_UD = open(UD_file,"r", encoding="utf-8")
     dd_data_UD = parse(data_UD.read())
 
-    d_voice = {"nsubj":{"H":0,"A":0,"N":0},"nsubj:pass":{"H":0,"A":0,"N":0},"obl:agent":{"H":0,"A":0,"N":0},"obj":{"H":0,"A":0,"N":0}}
+    d_voice = {"nsubj_A":{"P":0,"H":0,"A":0,"N":0},"nsubj_S":{"P":0,"H":0,"A":0,"N":0},"nsubj:pass":{"P":0,"H":0,"A":0,"N":0},"obl:agent":{"P":0,"H":0,"A":0,"N":0},"obj":{"P":0,"H":0,"A":0,"N":0}}
 
     for i,elem in enumerate(tqdm(dd_data_UD)):
         if max_len >0 and i >max_len:
@@ -1374,31 +1236,40 @@ def animacy_and_voice(UD_file,max_len,diff_anim=False,exactly_two=False):
         text = elem.metadata['text']
         #print(text)
         l = list(elem)
-        d_subtrees = create_subtrees_lists(l,False,True,True,passive=True)
-        #print(d_subtrees)
-        for (verb,voice,w,x),[l_pos,l_anim,l_gram,ldir_arg,ld] in d_subtrees.items():
-            to_add = True
-            l_anim_no_none = [l_anim[elem] for elem in ldir_arg if l_anim[elem]!=None]
+        l_head_anim_subj = {}
+        l_head_anim_obj = {}
+
+        for d_word in l: 
             
-            if exactly_two:
-                to_add = (len(l_anim_no_none)==2)
-            if diff_anim:
-                s = set(l_anim_no_none)
-                to_add = (len(s)>1) #check that if there are two diff animacy degree, we also have exaclty too elements
-            
-            if to_add:
-                for elem in ldir_arg:
-                    anim = l_anim[elem]
-                    if anim != None:
-                        #print((voice,l_anim[elem],l_gram[elem]))
-                        d_voice[l_gram[elem]][l_anim[elem]]+=1
+            if d_word["upos"] == "NOUN":
+                anim = d_word["misc"]["ANIMACY"]
+            elif "PRON" == d_word["upos"] and type(d_word["feats"]) == dict and "Person" in d_word["feats"] and d_word["feats"]["Person"] in ["1","2"]:
+                anim = "P"
+            else:
+                anim = None
+            if anim in ["A","P","H","N"]:
+                #print(d_word["form"],d_word["head"],d_word["deprel"],anim)
+                if d_word["deprel"] == "obj":
+                    l_head_anim_obj[d_word["head"]] = anim
+                elif d_word["deprel"] == "nsubj":
+                    l_head_anim_subj[d_word["head"]] = anim
+                elif d_word["deprel"] == "nsubj:pass":
+                    d_voice["nsubj:pass"][anim]+=1
+                elif d_word["deprel"] == "obl:agent":
+                    d_voice["obl:agent"][anim]+=1
+        #print("obj",l_head_anim_obj)
+        #print("subj",l_head_anim_subj)
+        for h,a in l_head_anim_subj.items():
+            if h in l_head_anim_obj.keys(): #tran verb
+                d_voice["obj"][l_head_anim_obj[h]]+=1
+                d_voice["nsubj_A"][a]+=1
+            else:
+                d_voice["nsubj_S"][a]+=1
         #print(d_voice)
-        #print("\n")
-    
-    np_count_agent = np.array([list(d_voice["nsubj"].values()),list(d_voice["obl:agent"].values())])
-    np_count_patient = np.array([list(d_voice["nsubj:pass"].values()),list(d_voice["obj"].values())])
-    print(d_voice)
-    return d_voice,np_count_agent,np_count_patient
+
+    return d_voice
+        
+        
 
 
 def print_default_dict(d_voice):
@@ -1505,7 +1376,7 @@ def plot_proportion_voice_H(diff_anim,exactly_two):
         print(file[:2])
         if file[:2] not in ["ja","zh","ko","sl"]:
             UD_file = "UD_with_anim_annot/"+file
-            d_voice,np_count_agent,np_count_patient = animacy_and_voice(UD_file,-1,diff_anim,exactly_two)
+            d_voice = animacy_and_voice(UD_file,-1)
             for elem,d in d_voice.items():
                 tot = d["A"]+d["H"]+d["N"]
                 if tot>0:
@@ -1544,7 +1415,7 @@ def plot_proportion_voice_subj(diff_anim,exactly_two):
     for file in files:
         print(file[:2])
         UD_file = "UD_with_anim_annot/"+file
-        d_voice,np_count_agent,np_count_patient = animacy_and_voice(UD_file,-1,diff_anim,exactly_two)
+        d_voice= animacy_and_voice(UD_file,-1)
         for lab in ["H","N"]:
             tot = d_voice["nsubj:pass"][lab]+d_voice["obj"][lab]
             if tot>0:
@@ -1584,7 +1455,7 @@ def plot_proportion_deprel(diff_anim,exactly_two):
     for file in files:
         print(file[:2])
         UD_file = "UD_with_anim_annot/"+file
-        d_voice,np_count_agent,np_count_patient = animacy_and_voice(UD_file,-1,diff_anim,exactly_two)
+        d_voice = animacy_and_voice(UD_file,-1)
         for lab in ["H","A","N"]:
             tot = d_voice["nsubj"][lab]+d_voice["nsubj:pass"][lab]+d_voice["obj"][lab]
             if tot>0:
@@ -1986,50 +1857,86 @@ def khi2_position():
     print("N P",khi2,pval)
 
 
-def line_plot_pos(UD_folder,rel):
+def line_plot_pos(UD_folder,rel,pro,per):
     d_all = {}
     for file in os.listdir(UD_folder):
         lang = file[:2]
         print(lang)
         UD_file_ner = UD_folder+file
-        d = noun_only_position_in_subtree(UD_file_ner,rel,-1)
+        d = noun_only_position_in_subtree(UD_file_ner,rel,-1,pro,per)
         print(d)
         d_all[lang] = d
-    #d = {
-    #"en": {"A": None, "B": 2, "C": 0.8}, 
-    #"fr": {"A": 0.1, "B": 2, "C": 0.7}, 
-    #"de": {"A": 1, "B": 2.2, "C": 0.6}
-    #}
         
     df = pd.DataFrame(d_all)
-    df.to_csv("anim")
+    df.to_csv("pos_anim.csv")
+    df = df.loc[['P', 'H', "A", "N"]]
     print(df)
+    df.plot(marker='o', figsize=(8, 5))
+
+    plt.xlabel("Animacy labels")
+    plt.ylabel("Average positions")
+    plt.legend(title="Languages")
+    plt.grid(True)
+    plt.savefig("rel_pos.png")
+    plt.show()
+
+
+def line_plot_voice(UD_folder,voice,max_len):
+    
+    def extract_proportions(d):
+        return {gram: anim_dict_count['H'] / sum(anim_dict_count.values()) if sum(anim_dict_count.values())>0 else np.nan for gram,anim_dict_count in d.items() }
+    d_heatmap_data={}
+    l_lang = []
+    for file in os.listdir(UD_folder):
+        lang = file[:2]
+        l_lang.append(lang)
+        print(lang)
+        UD_file_ner = UD_folder+file
+        d_count = animacy_and_voice(UD_file_ner,max_len)
+        print(d_count)
+        proportions = extract_proportions(d_count)
+        d_heatmap_data[lang] = proportions
+
+    df = pd.DataFrame(d_heatmap_data)
 
 
     # Transpose to have languages as the index
     #df = df.T
-
+    if voice == "active":
+        df_voice = df.loc[['nsubj_A', 'nsubj_S',"obj"]]
+        df_voice.dropna(axis=1, how='all')
+    if voice == "passive":
+        df_voice = df.drop(columns=['et', 'eu',"sl","ja","zh"])
+        df_voice = df_voice.loc[['obl:agent',"nsubj:pass"]]
+        df_voice.dropna(axis=1, how='all')
+    if voice == "P":
+        df_voice = df.drop(columns=['et', 'eu',"sl","ja"])
+        df_voice = df_voice.loc[["nsubj:pass","obj"]]
+        df_voice.dropna(axis=1, how='all')
     # Plotting the line plot
-    df.plot(marker='o', figsize=(8, 5))
+    df_voice.plot(marker='o', figsize=(8, 5))
+    df.to_csv("lineplot_voices.csv", index=False)
+    
    
     #plt.title("Values of A, B, and C for Each Language")
-    plt.xlabel("Language")
-    plt.ylabel("Average positions")
-    plt.legend(title="Metrics")
+    plt.xlabel("deprel")
+    plt.ylabel("Proportion of human")
+    plt.legend(title="languages")
     plt.grid(True)
+    plt.savefig("line_voice_"+voice+".png")
     plt.show()
+    
 
 def plot_acl(UD_folder,max_len=-1):
     d = {}
     for file in os.listdir(UD_folder):
         lang = file[:2]
-        print(lang)
-        UD_file_ner = UD_folder+file
-        l,d_tot = acl_roots(UD_file_ner,max_len)
+        if lang not in ["eu","sl","ja"]:
+            print(lang)
+            UD_file_ner = UD_folder+file
         
-        #s = set(l)
-        #print(l,d_tot)
-        d[lang] = {elem: l.count(elem)/d_tot[elem] for elem in ["H","A","N","P","PER"] if d_tot[elem]>0}
+            l,d_tot = acl_roots(UD_file_ner,max_len)
+            d[lang] = {elem: l.count(elem)/d_tot[elem] for elem in ["P","H","A","N"] if d_tot[elem]>0}
 
 
     print(d)
@@ -2037,15 +1944,17 @@ def plot_acl(UD_folder,max_len=-1):
     
     #df.loc[["H","A","P", "N"]] = df.loc[["H","A","N", "P"]].values
     df.to_csv("anim_acl_rel_pron.csv")
+    #df = df.drop(index=2)
     print(df)
 
     df.plot(marker='o', figsize=(8, 5))
    
     #plt.title("Values of A, B, and C for Each Language")
-    plt.xlabel("Language")
-    plt.ylabel("count")
-    plt.legend(title="Metrics")
+    plt.xlabel("Animacy labels")
+    plt.ylabel("Proportion of relativized entities")
+    plt.legend(title="Languages")
     plt.grid(True)
+    plt.savefig("rel_cl")
     plt.show()
 
 
@@ -2055,7 +1964,7 @@ def plot_subj_ratio(UD_folder,max_len=-1):
         lang = file[:2]
         print(lang)
         UD_file_ner = UD_folder+file
-        d_count , a,b = animacy_and_voice(UD_file_ner,-1,diff_anim=False,exactly_two=False)
+        d_count  = animacy_and_voice(UD_file_ner,-1)
         print(d_count)
         #exit()
         nb_N = sum([d["N"] for d in d_count.values()])
@@ -2096,61 +2005,46 @@ def plot_heatmap_voice(UD_folder,max_len):
         l_lang.append(lang)
         print(lang)
         UD_file_ner = UD_folder+file
-        d_count , a,b = animacy_and_voice(UD_file_ner,max_len,diff_anim=False,exactly_two=False)
+        d_count = animacy_and_voice(UD_file_ner,max_len)
         print(d_count)
         proportions = extract_proportions(d_count)
         d_heatmap_data[lang] = proportions
 
     df = pd.DataFrame(d_heatmap_data)
-    print(df)
-    i, j = 1, 2  # Swap Row2 and Row4
-    rows = df.iloc[[i, j]].copy()
+    #i, j = 1, 2  # Swap Row2 and Row4
+    #rows = df.iloc[[i, j]].copy()
     # Swap values and index names
-    df.iloc[[j, i]] = rows.values
-    df.index.values[[i, j]] = df.index.values[[j, i]]
-    
+    #df.iloc[[j, i]] = rows.values
+    #df.index.values[[i, j]] = df.index.values[[j, i]]
     print(df)
+    df_voice = df.loc[["nsubj:pass","obj"]]
+    df.to_csv("heatmap_voice.csv", index=False)
     plt.figure(figsize=(8, 4))
-    sns.heatmap(df, annot=True, cmap="Blues")
+    sns.heatmap(df_voice, annot=True, cmap="Blues")
     plt.title("Proportion of humans")
     plt.show()
 
 
 
-
+UD_folder = "UD_with_anim_ner_annot/"
 #UD_file = "UD_with_anim_annot/fr_gsd-ud-train.conllu"
-UD_file_ner = "UD_with_anim_ner_annot/fr_gsd-ud-train.conllu"
+UD_file_ner = "UD_with_anim_ner_annot/fr_gsd-ud-dev.conllu"
 #UD_file_ner = "UD_with_anim_ner_annot/de_hdt-ud-test.conllu"
 #UD_file = "UD_with_anim_annot/nl_alpino-ud-train.conllu"
 
 
 
-#print(animacy_and_voice(UD_file,max_len=-1,diff_anim =True,exactly_two=False))
-#plot_proportion_voice_H(diff_anim=True,exactly_two=True)
-#plot_proportion_voice_H(diff_anim=False,exactly_two=True)
 
-#plot_pos_subtree_rank(True,-1,tag = "all",pro=False,defin=False,anim_or_gram="anim",iobj=False,obl=False)
+#plot_heatmap_voice("UD_with_anim_ner_annot/",-1)
 
-#plot_proportion_deprel(diff_anim=False,exactly_two=False)
+#line_plot_pos(UD_folder,True,True,False)
 
-#plot_pos_subtree_mean(True,"all",anim_or_def="defin")
+#plot_acl(UD_folder,max_len=-1)
 
-#files = os.listdir("UD_with_anim_annot")
-#for file in files:
-#    UD_file = "UD_with_anim_annot/"+file
-#    create_csv(UD_file,-1)
+#animacy_and_voice(UD_file_ner,-1)
 
+#plot_heatmap_voice(UD_folder,-1)
 
-
-#rel = False
-#d = noun_only_position_in_subtree(UD_file_ner,rel,max_len=5)
-#print(d)
-#line_plot_pos("UD_with_anim_ner_annot/",rel)
-
-#acl_roots(UD_file_ner,15)
-#plot_acl("UD_with_anim_ner_annot/",max_len=-1)
-#animacy_and_voice(UD_file_ner,10,diff_anim=False,exactly_two=False)
-
-#plot_subj_ratio("UD_with_anim_ner_annot/",max_len=-1)
-
-plot_heatmap_voice("UD_with_anim_ner_annot/",-1)
+#line_plot_voice(UD_folder,"active",-1)
+line_plot_voice(UD_folder,"passive",-1)
+#line_plot_voice(UD_folder,"P",-1)
