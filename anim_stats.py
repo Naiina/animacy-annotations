@@ -452,67 +452,6 @@ def acl_roots(UD_file,max_len,all_acl=False):
     return l_anim,d_tot
 
 
-    
-
-
-
-def relative_order_MI(UD_file,max_len,Gram,direct_arg_only):
-    idxx = 0
-    data_UD = open(UD_file,"r", encoding="utf-8")
-    dd_data_UD = parse(data_UD.read())
-    joint_counts = defaultdict(lambda: defaultdict(int))
-    animacy_counts = defaultdict(int)
-    order_counts = defaultdict(lambda: defaultdict(int))
-    class_counts = defaultdict(int)
-    total_count = 0
-
-    for i,elem in enumerate(tqdm(dd_data_UD)):
-        idxx +=1
-        if max_len >0:
-            if idxx >max_len:
-                break
-        
-        
-        text = elem.metadata['text']
-        l = list(elem)
-
-        d_subtrees = create_subtrees_lists(l,True,Gram,direct_arg_only)
-        for l_pos,l_anim,l_gram,l_idx,l_defi in d_subtrees.values():
-
-            num_args = len(l_idx)
-            class_counts[num_args] += num_args
-            l_all = [(l_pos[i],l_anim[i],l_gram[i]) for i in l_idx if l_anim[i] !=None ]
-            l_all.sort()
-            for i,elem in enumerate(l_all):
-                animacy = elem[1]
-                order = i+1
-                
-                joint_counts[num_args][(animacy, order)] += 1
-                animacy_counts[animacy] += 1
-                order_counts[num_args][order] += 1
-                total_count += 1
-
-    # Step 3: Calculate conditional mutual information
-    total_mi = 0.0
-
-    for num_args, joint_dist in joint_counts.items():
-        mi = 0.0
-        class_total = class_counts[num_args]
-
-        for (animacy, order), joint_count in joint_dist.items():
-            p_a_o = joint_count / class_total
-            p_a = animacy_counts[animacy] / total_count
-            p_o = order_counts[num_args][order] / class_total
-
-            mi += p_a_o * (m.log(p_a_o,2) -m.log( p_a,2) -m.log( p_o, 2))
-        
-        # Weight by the frequency of this class
-        weight = class_counts[num_args] / total_count
-        total_mi += weight * mi
-    print(total_mi)
-        
-
-
 def proportion_sentences_only_one_anim(UD_file):
 
     only_one_class = 0
@@ -590,66 +529,11 @@ def definitness_and_animacy(UD_file,max_len):
     return d_count,np_count
 
 
-
-def definitness_and_animacy_MI(UD_file,max_len):
-
-    data_UD = open(UD_file,"r", encoding="utf-8")
-    dd_data_UD = parse(data_UD.read())
-    idxx = 0
-
-    l_anim = ["N","A","H"]
-    l_def = ["Ind","Def"]
-    d_anim = {an:0 for an in l_anim}
-    d_def = {de:0 for de in l_def}
-    d_joint = {(an,de):0 for an in l_anim for de in l_def}
-    d_count = {"Anim":d_anim,"Def":d_def,"Joint":d_joint,"Total":0}
-    for i,elem in enumerate(tqdm(dd_data_UD)):
-        idxx +=1
-        if max_len >0:
-            if idxx > max_len:
-                break
-        
-        text = elem.metadata['text']
-        #print(text)
-        l = list(elem)
-        l_det = []
-        d_noun = {}
-        #gather all nouns and det of the sentence l
-        for d_word in l:
-            if "DET" == d_word["upos"]:
-                if type(d_word["feats"]) == dict:
-                    if "Definite" in d_word["feats"].keys():
-                        defin = d_word["feats"]["Definite"]
-                        head = d_word["head"]
-                        det = (head,defin)
-                        l_det.append(det)
-                
-            if "NOUN" == d_word["upos"]:
-                anim = d_word["misc"]["ANIMACY"]
-                id = d_word["id"]
-                d_noun[id] = anim
-        #find for each det the associated noun
-        for (head,defin) in l_det:
-            if head in d_noun.keys():
-                #print(head,defin )
-                anim = d_noun[head]
-                d_count["Anim"][anim]+=1
-                d_count["Def"][defin]+=1
-                d_count["Joint"][(anim,defin)]+=1
-                d_count["Total"]+=1
-    #np_count = np.array([list(d_count[k].values()) for k in d_count.keys()])
-    #print(d_count)
-    return d_count#,np_count
-
-
-
-
 def number_and_animacy(UD_file, max_len):
     data_UD = open(UD_file, "r", encoding="utf-8")
     dd_data_UD = parse(data_UD.read())
-    d_sing = {"N":0, "A":0, "H":0}
-    d_plur = {"N":0, "A":0, "H":0}
-    d_count = {"Sing":d_sing, "Plur": d_plur}
+    d_count = defaultdict(lambda: defaultdict(int))
+
     for idxx, elem in enumerate(tqdm(dd_data_UD)):
         if max_len >0:
             if idxx > max_len:
@@ -660,125 +544,15 @@ def number_and_animacy(UD_file, max_len):
         for d_word in l:
             if d_word["upos"] == "NOUN":
                 anim = d_word["misc"]["ANIMACY"]
-                if type(d_word["feats"]) == dict and "Number" in d_word["feats"].keys():
-                    nb = d_word["feats"]["Number"]
-                    if nb in ["Sing", "Plur"]:
-                        if nb and anim:
-                            d_count[nb][anim]+=1
+            elif d_word["upos"] == "PRON":
+                anim = "P"
+            if d_word["upos"] in ["NOUN", "PRON"] and type(d_word["feats"]) == dict and "Number" in d_word["feats"].keys():
+                nb = d_word["feats"]["Number"]
+                if nb in ["Sing", "Plur"]:
+                    if nb and anim:
+                        d_count[nb][anim]+=1
 
-    np_count = np.array([list(d_count[k].values()) for k in d_count.keys()])
-
-    return d_count,np_count
-
-
-def number_and_animacy_MI(UD_file,max_len):
-    #print(UD_file)
-
-    data_UD = open(UD_file,"r", encoding="utf-8")
-    dd_data_UD = parse(data_UD.read())
-    idxx = 0
-    l_anim = ["N","A","H"]
-    l_nb = ["Sing","Plur"]
-    d_anim = {an:0 for an in l_anim}
-    d_nb = {nb:0 for nb in l_nb}
-    d_joint = {(an,nb):0 for an in l_anim for nb in l_nb}
-    d_count = {"Anim":d_anim,"Nb":d_nb,"Joint":d_joint,"Total":0}
-
-    for i,elem in enumerate(tqdm(dd_data_UD)):
-        if max_len >0:
-            if i > max_len:
-                break
-        
-        text = elem.metadata['text']
-        #print(text)
-        l = list(elem)
-        #gather all nouns and det of the sentence l
-        for d_word in l:
-            
-            if "NOUN" == d_word["upos"]:
-                anim = d_word["misc"]["ANIMACY"]
-                if type(d_word["feats"]) is dict and "Number" in d_word["feats"]: #print ex
-                    nb = d_word["feats"]["Number"]
-                    if nb in ["Sing","Plur"]:
-                        d_count["Joint"][(anim,nb)]+=1
-                        d_count["Anim"][anim]+=1
-                        d_count["Nb"][nb]+=1
-                        d_count["Total"]+=1
-
-    #np_count = np.array([list(d_count[k].values()) for k in d_count.keys()])
-    #print(d_count)
-    #for k,v in d_count["Joint"].items():
-    #    print(k,v/d_count["Total"])
-    return d_count#,np_count
-
-def compute_MI(UD_file,feat,max_len):
-    if feat == "Nb":
-        d_count = number_and_animacy_MI(UD_file,max_len)
-    if feat == "Def":
-        d_count = definitness_and_animacy_MI(UD_file,max_len)
-
-    print(d_count)
-    mutual_information = 0.0
-    total_count = d_count["Total"]
-
-    for (animacy, dependency), joint_count in d_count["Joint"].items():
-        p_a_d = joint_count / total_count
-        p_a = d_count["Anim"][animacy] / total_count
-        p_d = d_count[feat][dependency] / total_count
-        mutual_information += p_a_d *( m.log(p_a_d,2) - m.log (p_a,2) -m.log(p_d,2))
-    print(mutual_information)
-    return mutual_information
-
-def compute_MI_tests(UD_file,feat,max_len):
-    ent_a = 0
-    ent_n = 0
-    cond_ent_a_n = 0
-    cond_ent_n_a = 0
-    mutual_information = 0
-    j_ent = 0
-
-
-    if feat == "Nb":
-        d_count = number_and_animacy_MI(UD_file,max_len)
-    if feat == "Def":
-        d_count = definitness_and_animacy_MI(UD_file,max_len)
-    
-    total_count = d_count["Total"]
-    #direct MI computation
-    for (animacy, dependency), joint_count in d_count["Joint"].items():
-        p_a_d = joint_count / total_count
-
-        p_a = d_count["Anim"][animacy] / total_count
-        p_d = d_count[feat][dependency] / total_count
-        mutual_information += p_a_d *( m.log(p_a_d,2) - m.log (p_a,2) -m.log(p_d,2))
-    tot = sum(d_count["Anim"].values())
-    #anim entropy
-    for animacy, count in d_count["Anim"].items():
-        p_a = count/tot
-        print("pa",p_a)
-        ent_a -= p_a*m.log(p_a,2)
-    #def entropy
-    for num, count in d_count["Nb"].items():
-        pn = count/tot
-        ent_n -= pn*m.log(pn,2)
-    #conditional entropy: H(nb|anim)
-    for (animacy, num), joint_count in d_count["Joint"].items():
-        p_a_n = joint_count / tot
-        p_a = d_count["Anim"][animacy] / tot
-        cond_ent_n_a -= p_a_n *( m.log(p_a_n,2) - m.log (p_a,2))
-    #conditional entropy: H(anim|nb)
-    for (animacy, num), joint_count in d_count["Joint"].items():
-        p_a_n = joint_count / tot
-        p_n = d_count["Nb"][num] / tot
-        cond_ent_a_n -= p_a_n *( m.log(p_a_n,2) - m.log (p_n,2))
-    #joint entropy
-    for (animacy, num), joint_count in d_count["Joint"].items():
-        p_a_n = joint_count / tot
-        j_ent -= p_a_n *( m.log(p_a_n,2))
-    print("tot",tot)
-    print("anim entr:",ent_a," def ent:",ent_n," condi ent a_n",cond_ent_a_n," condi ent n_a",cond_ent_n_a," joint ent",j_ent)
-    print("MI sub a",ent_a-cond_ent_a_n,"MI sub n",ent_n-cond_ent_n_a ," MI",mutual_information)
-    return mutual_information
+    return d_count
 
 
 def prop_sentences_only_two_enties_diff_anim(UD_file):
@@ -1269,7 +1043,7 @@ def print_default_dict(d_voice):
 
 
 def plot_proportion_num(ud_repo, max_len, output_repo):
-    animacy_classes = ["H", "A", "N"]
+    animacy_classes = ["P", "H", "A", "N"]
     number_classes = ["Plur", "Sing"]
     l_lang = []
     l_prop = []
@@ -1279,30 +1053,39 @@ def plot_proportion_num(ud_repo, max_len, output_repo):
     for file in files:
         if file[:2] not in ["ja", "zh", "ko"]:
             UD_file = os.path.join(ud_repo, file)
-            d_count, _ = number_and_animacy(UD_file, max_len)
+            d_count = number_and_animacy(UD_file, max_len)
 
-            totals = {nc: sum(d_count[nc][ac] for ac in animacy_classes) for nc in number_classes}
+            totals = {ac: sum(d_count[nc][ac] for nc in number_classes) for ac in animacy_classes}
 
             for ac in animacy_classes:
                 for nc in number_classes:
                     l_lang += [file[:2]]
                     l_num += [nc]
                     l_anim += [ac]
-                    if totals[nc] > 0:
-                        l_prop += [d_count[nc][ac] / totals[nc]]
+                    if totals[ac] > 0:
+                        l_prop += [d_count[nc][ac] / totals[ac]]
                     else:
                         l_prop += [0]
     
-    d = {"language": l_lang, "proportion": l_prop, "number": l_num, "animacy": l_anim}
+    d = {"Language": l_lang, "Proportion": l_prop, "Number": l_num, "Animacy": l_anim}
     df = pd.DataFrame.from_dict(d)
+    df = df[df.Number == "Plur"]
 
-    g = sns.barplot(
-        data=df,
-        x="animacy", y="proportion", hue="number",
-        errorbar="sd", palette="dark",
+    sns.lineplot(
+    data=df,
+    x='Animacy',
+    y='Proportion',
+    hue='Language',
+    ci=None,
+    palette='Set2'
     )
+    plt.xlabel('Animacy')
+    plt.ylabel('Proportion of Plurals')
+    plt.xticks(rotation=45)
+
     plt.savefig(os.path.join(output_repo, "proportion_plot_number.pdf"))
     plt.show()
+
 
 def plot_proportion_def():
     l_lang = []
