@@ -8,25 +8,18 @@ from conllu import parse
 from collections import defaultdict
 from tqdm import tqdm
 #from nltk.corpus import wordnet as wn
-import json
 import pandas as pd
 import argparse
 import os
 #from datasets import load_dataset
-from datasets import Dataset, DatasetDict
 import numpy as np
 
 import math as m
-import torch
-import seaborn as sns
 import matplotlib.pyplot as plt
+import seaborn as sns
 from scipy.stats import chi2_contingency as chi2_contingency
 
-plt.rcParams['font.family'] = 'Times New Roman'
-
-
-
-
+sns.set_theme(style="whitegrid", font="Times New Roman")
 
 def find_roots(l,pro,defin = False):
     l_deprel = ("csubj","xcomp","ccomp","acl","parataxis","acl:relcl")
@@ -651,34 +644,27 @@ def definitness_and_animacy_MI(UD_file,max_len):
 
 
 
-def number_and_animacy(UD_file,max_len):
-    #print(UD_file)
-
-    data_UD = open(UD_file,"r", encoding="utf-8")
+def number_and_animacy(UD_file, max_len):
+    data_UD = open(UD_file, "r", encoding="utf-8")
     dd_data_UD = parse(data_UD.read())
-    idxx = 0
-    d_sing = {"N":0,"A":0,"H":0}
-    d_plur = {"N":0,"A":0,"H":0}
-    d_count = {"Sing":d_sing,"Plur":d_plur}
-    for i,elem in enumerate(tqdm(dd_data_UD)):
-        idxx +=1
+    d_sing = {"N":0, "A":0, "H":0}
+    d_plur = {"N":0, "A":0, "H":0}
+    d_count = {"Sing":d_sing, "Plur": d_plur}
+    for idxx, elem in enumerate(tqdm(dd_data_UD)):
         if max_len >0:
             if idxx > max_len:
                 break
-        
-        text = elem.metadata['text']
-        #print(text)
+
         l = list(elem)
-        #gather all nouns and det of the sentence l
+        #gather all nouns of the sentence l
         for d_word in l:
-            
-                
-            if "NOUN" == d_word["upos"]:
+            if d_word["upos"] == "NOUN":
                 anim = d_word["misc"]["ANIMACY"]
                 if type(d_word["feats"]) == dict and "Number" in d_word["feats"].keys():
                     nb = d_word["feats"]["Number"]
-                    if nb in ["Sing","Plur"]:
-                        d_count[nb][anim]=d_count[nb][anim]+1
+                    if nb in ["Sing", "Plur"]:
+                        if nb and anim:
+                            d_count[nb][anim]+=1
 
     np_count = np.array([list(d_count[k].values()) for k in d_count.keys()])
 
@@ -1282,46 +1268,40 @@ def print_default_dict(d_voice):
 
 
 
-def plot_proportion_num():
+def plot_proportion_num(ud_repo, max_len, output_repo):
+    animacy_classes = ["H", "A", "N"]
+    number_classes = ["Plur", "Sing"]
     l_lang = []
     l_prop = []
-    l_def = []
-    files = os.listdir("UD_with_anim_annot")
+    l_num = []
+    l_anim = []
+    files = os.listdir(ud_repo)
     for file in files:
-        if file[:2] not in ["ja","zh","ko"]:
-            UD_file = "UD_with_anim_annot/"+file
-            d_count,np_count = number_and_animacy(UD_file,-1)
-            d_plur = d_count["Plur"]
-            d_sing = d_count["Sing"]
-            a_plur = d_plur["A"]+d_plur["H"]+d_plur["N"]
-            a_sing = d_sing["A"]+d_sing["H"]+d_sing["N"]
-            if a_plur>0:
-                l_prop += [d_plur["H"]/a_plur]
-            else:
-                l_prop+=[0]
-            if a_sing >0:
-                l_prop += [d_sing["H"]/a_sing]
-            else:
-                l_prop += [0]
-            l_def = l_def +["Plur"] +["Sing"]
-            l_lang = l_lang + [file[:2]]*2
+        if file[:2] not in ["ja", "zh", "ko"]:
+            UD_file = os.path.join(ud_repo, file)
+            d_count, _ = number_and_animacy(UD_file, max_len)
 
-    d = {"language":l_lang,"proportion":l_prop,"Number":l_def}
+            totals = {nc: sum(d_count[nc][ac] for ac in animacy_classes) for nc in number_classes}
+
+            for ac in animacy_classes:
+                for nc in number_classes:
+                    l_lang += [file[:2]]
+                    l_num += [nc]
+                    l_anim += [ac]
+                    if totals[nc] > 0:
+                        l_prop += [d_count[nc][ac] / totals[nc]]
+                    else:
+                        l_prop += [0]
+    
+    d = {"language": l_lang, "proportion": l_prop, "number": l_num, "animacy": l_anim}
     df = pd.DataFrame.from_dict(d)
-    #print(df)
 
-    sns.set_theme(style="whitegrid")
-
-    # Draw a nested barplot by species and sex
-    g = sns.catplot(
-        data=df, kind="bar",
-        x="language", y="proportion", hue="Number",
-        errorbar="sd", palette="dark", alpha=.6, height=6
+    g = sns.barplot(
+        data=df,
+        x="animacy", y="proportion", hue="number",
+        errorbar="sd", palette="dark",
     )
-    g.despine(left=True)
-    g.set_axis_labels("", "proportion")
-    #g.fig.suptitle("Proportion of animate entities per number")
-    plt.savefig("UD_data_anim/proportion_plot_number.png")
+    plt.savefig(os.path.join(output_repo, "proportion_plot_number.pdf"))
     plt.show()
 
 def plot_proportion_def():
@@ -1352,7 +1332,7 @@ def plot_proportion_def():
     df = pd.DataFrame.from_dict(d)
     #print(df)
 
-    sns.set_theme(style="whitegrid")
+    
 
     # Draw a nested barplot by species and sex
     g = sns.catplot(
@@ -1392,7 +1372,7 @@ def plot_proportion_voice_H(diff_anim,exactly_two):
     df.iloc[1], df.iloc[2] = df.iloc[2].copy(), df.iloc[1].copy()
     print(df)
 
-    sns.set_theme(style="whitegrid")
+    
 
     # Draw a nested barplot by species and sex
     g = sns.catplot(
@@ -1432,7 +1412,7 @@ def plot_proportion_voice_subj(diff_anim,exactly_two):
     #df.iloc[1], df.iloc[2] = df.iloc[2].copy(), df.iloc[1].copy()
     print(df)
 
-    sns.set_theme(style="whitegrid")
+    
 
     # Draw a nested barplot by species and sex
     g = sns.catplot(
@@ -1472,7 +1452,7 @@ def plot_proportion_deprel(diff_anim,exactly_two):
     #df.iloc[1], df.iloc[2] = df.iloc[2].copy(), df.iloc[1].copy()
     print(df)
 
-    sns.set_theme(style="whitegrid")
+    
     g = sns.catplot(
         data=df, kind="bar",
         x="language", y="proportion", hue="Subject's animacy",
@@ -1548,7 +1528,7 @@ def plot_pos_subtree_mean(rel,tag_anim,anim_or_def="anim"):
                     d["definiteness"].append(elem)
     df = pd.DataFrame.from_dict(d)
     print(df)
-    sns.set_theme(style="whitegrid")
+    
 
 
     if anim_or_def=="anim":
@@ -1601,7 +1581,7 @@ def plot_pos_subtree_mean_diff(rel):
         d["sentence types"].append("several animacy labels")
     df = pd.DataFrame.from_dict(d)
     print(df)
-    sns.set_theme(style="whitegrid")
+    
 
     # Draw a nested barplot by species and sex
     g = sns.catplot(
@@ -1686,7 +1666,7 @@ def plot_pos_subtree_anim_def(rel,which_clauses,size,tag,pro,defin):
             d["animacy"].append("Both")
     df = pd.DataFrame.from_dict(d)
     print(df)
-    sns.set_theme(style="whitegrid")
+    
 
     # Draw a nested barplot by species and sex
     g = sns.catplot(
@@ -1993,7 +1973,7 @@ def plot_subj_ratio(UD_folder,max_len=-1):
     plt.grid(True)
     plt.show()
 
-def plot_heatmap_voice(UD_folder,max_len):
+def plot_heatmap_voice(UD_folder, max_len):
 
 
     def extract_proportions(d):
@@ -2025,26 +2005,45 @@ def plot_heatmap_voice(UD_folder,max_len):
     plt.show()
 
 
+PLOT_FUNCTIONS = {
+    "number": plot_proportion_num,
+}
 
-UD_folder = "UD_with_anim_ner_annot/"
-#UD_file = "UD_with_anim_annot/fr_gsd-ud-train.conllu"
-UD_file_ner = "UD_with_anim_ner_annot/fr_gsd-ud-dev.conllu"
-#UD_file_ner = "UD_with_anim_ner_annot/de_hdt-ud-test.conllu"
-#UD_file = "UD_with_anim_annot/nl_alpino-ud-train.conllu"
+def get_args():
+
+    parser = argparse.ArgumentParser(description="Animacy plots.")
+
+    # Adding an argument 'type' with choices 'deprel' and 'number'
+    parser.add_argument(
+        '--type',
+        type=str,
+        choices=['number'],
+        required=True,
+    )
+    parser.add_argument(
+        '--max_len',
+        type=int,
+        default=-1,
+    )
+    parser.add_argument(
+        '--ud_folder',
+        type=str,
+        default="UD_with_anim_ner_annot/",
+    )
+    parser.add_argument(
+        '--output_folder',
+        type=str,
+        default="plots",
+    )
+
+    args = parser.parse_args()
+    return args
 
 
+if __name__ == "__main__":
+    args = get_args()
+    plot_function = PLOT_FUNCTIONS[args.type]
+    if not os.path.exists(args.output_folder):
+        os.makedirs(args.output_folder)
 
-
-#plot_heatmap_voice("UD_with_anim_ner_annot/",-1)
-
-#line_plot_pos(UD_folder,True,True,False)
-
-#plot_acl(UD_folder,max_len=-1)
-
-#animacy_and_voice(UD_file_ner,-1)
-
-#plot_heatmap_voice(UD_folder,-1)
-
-#line_plot_voice(UD_folder,"active",-1)
-line_plot_voice(UD_folder,"passive",-1)
-#line_plot_voice(UD_folder,"P",-1)
+    plot_function(args.ud_folder, args.max_len, args.output_folder)

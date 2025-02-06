@@ -1,0 +1,7 @@
+conllu
+tqdm
+pandas
+numpy
+seaborn
+matplotlib
+scipy
