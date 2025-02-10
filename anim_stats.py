@@ -1,10 +1,12 @@
 import pandas as pd
+import numpy as np
 import argparse
 import os
-import numpy as np
-
+from collections import defaultdict
 import matplotlib.pyplot as plt
 import seaborn as sns
+from statsmodels.formula.api import mnlogit
+from scipy.stats import chi2
 
 from stats_utils import (
     noun_only_position_in_subtree, 
@@ -24,10 +26,13 @@ def plot_number(ud_repo, max_len, output_repo):
     l_num = []
     l_anim = []
     files = os.listdir(ud_repo)
+    all_stats = []
     for file in files:
         if file[:2] not in ["ja", "zh", "ko"]:
             UD_file = os.path.join(ud_repo, file)
-            d_count = number_and_animacy(UD_file, max_len)
+            d_count, rows = number_and_animacy(UD_file, max_len)
+            rows = [r + [file[:2]] for r in rows]
+            all_stats += rows
 
             totals = {ac: sum(d_count[nc][ac] for nc in number_classes) for ac in animacy_classes}
 
@@ -41,6 +46,24 @@ def plot_number(ud_repo, max_len, output_repo):
                     else:
                         l_prop += [0]
     
+    # STATS
+    df = pd.DataFrame.from_dict(all_stats)
+    df.columns = ["Number", "Animacy", "Language"]
+    df = df[df['Animacy'] != 'P']
+    df['Number'] = df['Number'].replace(['Sing', 'Plur'], [0, 1])
+    df['Animacy'] = df['Animacy'].replace(['N', 'A', 'H'], [0, 1, 2])
+
+    # Adding language as categorical using C()
+    model1_sm = mnlogit('Number ~ Animacy', data=df).fit()
+
+    # Summary of the model
+    print(model1_sm.summary())
+
+    # Exponentiate the coefficients to get odds ratios
+    odds_ratios = np.exp(model1_sm.params)
+    print("\nOdds Ratios:\n", odds_ratios)
+
+    # PLOT
     d = {"Language": l_lang, "Proportion": l_prop, "Number": l_num, "Animacy": l_anim}
     df = pd.DataFrame.from_dict(d)
     df = df[df.Number == "Plur"]
@@ -153,36 +176,47 @@ def plot_voice(UD_folder, max_len, output_folder):
     l_lang = []
     for file in os.listdir(UD_folder):
         lang = file[:2]
+        print(lang)
         l_lang.append(lang)
         UD_file_ner = UD_folder+file
-        d_count = animacy_and_voice(UD_file_ner,max_len)
-        d_count = {deprel: {anim: count / (sum(d_count[deprel][anim] for deprel in d_count) + 1e-12) for anim, count in v.items()} for deprel, v in d_count.items()}
+        d_count = animacy_and_voice(UD_file_ner, max_len)
+        new_d = defaultdict(lambda: defaultdict(int))
+        for deprel, d in d_count.items():
+            for anim, count in d.items():
+                if count:
+                    new_d[deprel][anim] = count / sum(d.values())
+                elif lang == 'ja' and anim == 'P' and deprel not in ['obl:agent', 'nsubj:pass']:
+                    new_d[deprel][anim] = 0
+                else:
+                    new_d[deprel][anim] = pd.NA
+        d_count = new_d
 
-        d_count = {k: {kk: vv / sum(v.values()) if sum(v.values()) > 0 else pd.NA for kk, vv in v.items()} for k, v in d_count.items()}
         d_heatmap_data[lang] = d_count
     
     df = pd.concat({k: pd.DataFrame(v).T for k, v in d_heatmap_data.items()}, axis=0)
     df = df.reset_index()
     df.columns = ['Language', 'Deprel', 'P', 'H', 'A', 'N']
-    df = pd.melt(df, id_vars=['Language', 'Deprel'], var_name='Animacy', value_name='Proportion')
-    df = df.dropna()
-    df['Proportion'] = pd.to_numeric(df['Proportion'], errors='coerce')
 
-    # FacetGrid for each language
-    g = sns.FacetGrid(df, col='Language', col_wrap=6, height=4)
+    df = pd.melt(df, id_vars=['Language', 'Deprel'], var_name='Animacy', value_name='Proportion')
+    df['Proportion'] = pd.to_numeric(df['Proportion'], errors='coerce')
 
     column_order = ["obl:agent", "nsubj_A", "nsubj_S", "nsubj:pass", "obj"]
 
-    # Heatmap for each facet
-    g.map_dataframe(
-        lambda data, **kwargs: sns.heatmap(
+    # FacetGrid for each language
+    g = sns.FacetGrid(df, col='Language', col_wrap=6, height=4)
+    
+    def plot_func(data, **kwargs):
+        print(data)
+        sns.heatmap(
             data.pivot_table(index='Animacy', columns='Deprel', values='Proportion', sort=False).reindex(column_order, axis=1),
             cmap=sns.cm.rocket_r,
             cbar=True,
             vmin=0, vmax=1,  # Assuming proportions are between 0 and 1
             **kwargs
         )
-)
+
+    # Heatmap for each facet
+    g.map_dataframe(plot_func)
 
     # Adjust layout
     g.set_axis_labels("", "Animacy")

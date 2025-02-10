@@ -1,7 +1,6 @@
 conllu
 tqdm
 pandas
-numpy
 seaborn
 matplotlib
-scipy
+statsmodels

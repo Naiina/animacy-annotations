@@ -7,6 +7,7 @@ def number_and_animacy(UD_file, max_len):
     data_UD = open(UD_file, "r", encoding="utf-8")
     dd_data_UD = parse(data_UD.read())
     d_count = defaultdict(lambda: defaultdict(int))
+    rows = []
 
     for idxx, elem in enumerate(tqdm(dd_data_UD)):
         if max_len >0:
@@ -25,8 +26,9 @@ def number_and_animacy(UD_file, max_len):
                 if nb in ["Sing", "Plur"]:
                     if nb and anim:
                         d_count[nb][anim]+=1
+                        rows.append([nb, anim])
 
-    return d_count
+    return d_count, rows
 
 
 def get_voice(d_word):
