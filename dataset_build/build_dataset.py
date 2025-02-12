@@ -5,7 +5,7 @@ import pandas as pd
 from datasets import Dataset, DatasetDict, ClassLabel, Sequence
 from nltk.corpus import wordnet as wn
 import numpy as np
-from util import create_sentence, load_wn_map
+from dataset_util import create_sentence, load_wn_map
 from collections import Counter
 from itertools import chain
 import random
@@ -21,19 +21,6 @@ random.seed(SEED)
 BN_MAP_PATH = 'bnids_map.txt'
 
 def balanced_ratio_split(df, train_ratio=0.75, test_ratio=0.15, dev_ratio=0.10, random_state=SEED):
-    """
-    Split dataset maintaining both sentence ratios and label distribution balance.
-
-    Args:
-        df: DataFrame with 'anim_tags' column containing lists of labels
-        train_ratio: desired ratio of sentences for training set
-        test_ratio: desired ratio of sentences for test set
-        dev_ratio: desired ratio of sentences for development set
-        random_state: seed for random number generator to ensure reproducibility
-
-    Returns:
-        train_df, test_df, dev_df
-    """
     # Calculate target sentence counts
     total_sentences = len(df)
     target_counts = {
@@ -57,39 +44,49 @@ def balanced_ratio_split(df, train_ratio=0.75, test_ratio=0.15, dev_ratio=0.10, 
     for num_labels, group in label_groups:
         group_size = len(group)
 
-        # Calculate target sizes for this group
+        # Calculate the target number of sentences for each dataset split (train, test, dev)
         group_train_size = int(group_size * train_ratio)
         group_test_size = int(group_size * test_ratio)
         group_dev_size = group_size - (group_train_size + group_test_size)
 
         # Get label distribution for this group
         group_label_dist = get_dist(group)
-
-        # Sort sentences by label combination frequency
         group = group.copy()
+
+        # Create a unique string identifier for each sentence's label combination, e.g. A_N_N , A_H_H_N, etc.
+        # Sorting ensures consistent ordering of labels within the string
         group['label_combo'] = group['anim_tags'].apply(lambda x: '_'.join(sorted(x)))
+
+        # Count occurrences of each label combination in the dataset
         combo_counts = group['label_combo'].value_counts()
+
+        # Map these counts back to the sentences so each sentence gets a frequency score
         group['combo_freq'] = group['label_combo'].map(combo_counts)
 
-        # Sort by frequency (rarest first) and then by a random factor
+        # Initialize a random number generator with a fixed seed for reproducibility
         rng = np.random.default_rng(random_state)
 
-        # Generate random numbers using the random state
+        # Assign a random number to each sentence
         group['random'] = rng.random(len(group))
 
-        # Sort by 'combo_freq' and 'random'
+        # Store the original index to maintain reference after sorting
         group['original_index'] = group.index
+
+        # Sort sentences by:
+        # 1. 'combo_freq' (ascending): Prioritizes rare label combinations
+        # 2. 'random' (ascending): Ensures randomization within same-frequency groups
+        # 3. 'original_index' (ascending): Maintains original order as a last tie-breaker
         group = group.sort_values(['combo_freq', 'random', 'original_index'])
 
-        # Initialize current label counts for each split
+        # Initialize counters to track label distributions in each split
         current_counts = {'train': Counter(), 'test': Counter(), 'dev': Counter()}
 
-        # Create empty DataFrames for each split in this group
+        # Create empty DataFrames to store assigned sentences for train, test, and dev
         group_train = pd.DataFrame(columns=group.columns)
         group_test = pd.DataFrame(columns=group.columns)
         group_dev = pd.DataFrame(columns=group.columns)
 
-        # Distribute sentences
+        # Iterate through each sentence in the sorted group to distribute them
         for _, row in group.iterrows():
             # Calculate scores for each split based on:
             # 1. How far it is from target size
@@ -103,9 +100,11 @@ def balanced_ratio_split(df, train_ratio=0.75, test_ratio=0.15, dev_ratio=0.10, 
                 'dev': group_dev_size
             }
 
+            # Evaluate each split (train, test, dev) to determine the best fit for the sentence
             for split_name in split_order:
                 target_size = target_sizes[split_name]
 
+                # Select the corresponding split DataFrame
                 if split_name == 'train':
                     split_df = group_train
                 elif split_name == 'test':
@@ -113,31 +112,37 @@ def balanced_ratio_split(df, train_ratio=0.75, test_ratio=0.15, dev_ratio=0.10, 
                 else:
                     split_df = group_dev
 
-                # Skip if split is already full
+                # If this split is already full, assign a very low score to avoid selecting it
                 if len(split_df) >= target_size:
                     scores[split_name] = -float('inf')
                     continue
 
-                # Calculate size score (how far from target)
+                # ---- Scoring Mechanism ----
+                # 1. **Size Score**: Encourages filling up the split proportionally
                 size_score = 1 - (len(split_df) / target_size if target_size > 0 else 0)
 
-                # Calculate label balance score
+                # 2. **Label Balance Score**: Ensures an even label distribution
                 label_score = 0
                 for label in row['anim_tags']:
+                    # Calculate current ratio of this label in the split
                     current_ratio = (current_counts[split_name][label] + 1) / (
                                 sum(current_counts[split_name].values()) + len(row['anim_tags']))
+                    # Calculate the target ratio of this label based on group-wide distribution
                     target_ratio = group_label_dist[label] / sum(group_label_dist.values())
+                    # Higher score if the label ratio in the split is closer to the target
                     label_score += 1 - abs(current_ratio - target_ratio)
 
-                # Combine scores
+                # Average the size and label balance scores to get the final score
                 scores[split_name] = (size_score + label_score) / 2
 
-            # Assign to best scoring split
+            # ---- Assign Sentence to Best Split ----
+            # Sort splits by score and, in case of ties, prioritize order (train > test > dev)
             best_split = max(
                 sorted(scores.items(), key=lambda x: (x[1], x[0])),  # x[0] is the split name
                 key=lambda x: x[1]
             )[0]
 
+            # Add the sentence to the best-suited split and update label distribution counts
             if best_split == 'train':
                 group_train = pd.concat([group_train, row.to_frame().T])
                 current_counts['train'].update(row['anim_tags'])
@@ -148,12 +153,10 @@ def balanced_ratio_split(df, train_ratio=0.75, test_ratio=0.15, dev_ratio=0.10, 
                 group_dev = pd.concat([group_dev, row.to_frame().T])
                 current_counts['dev'].update(row['anim_tags'])
 
-        # Add this group's splits to the main splits
         train_dfs.append(group_train)
         test_dfs.append(group_test)
         dev_dfs.append(group_dev)
 
-    # Combine all groups
     train_df = pd.concat(train_dfs, ignore_index=True)
     test_df = pd.concat(test_dfs, ignore_index=True)
     dev_df = pd.concat(dev_dfs, ignore_index=True)

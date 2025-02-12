@@ -8,7 +8,7 @@ import pyconll
 import os
 import re
 import argparse
-from utils import ADJ_MAP_LARGE, annotation_prompt
+from utils import ADJ_MAP_LARGE, get_prompt
 import logging
 import torch
 import torch.distributed as dist
@@ -23,19 +23,19 @@ torch.cuda.set_device(local_rank)
 
 
 def find_delete(sentence):
-    VP = False
+    lack_VP = True
     verbs = []
     for token in sentence:
         if token.upos == 'VERB' or token.upos == 'AUX':
             verbs.append(token)
 
         if token.form is None:
-            return [False]
+            return True
 
     if verbs:
-        VP = True
+        lack_VP = False
 
-    return [VP]
+    return lack_VP
 
 
 def setup_model_and_tokenizer(MODEL_NAME, ADAPTER_NAME):
@@ -93,14 +93,14 @@ def generate_aya_original(prompts, model, tokenizer, temperature=0.1, top_p=1.0,
 
     gen_text = tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
 
-    def find_first_letter(response):
+    def get_prediction(response):
         for char in response:
             if char in ['A', 'N', 'H']:
                 return char
         return None
 
     # print('Gen text: ', gen_text)
-    predictions = [find_first_letter(r) for r in gen_text]
+    predictions = [get_prediction(r) for r in gen_text]
 
     return predictions
 
@@ -129,24 +129,22 @@ def predict_in_batches(model, tokenizer, data, adj_lang, batch_size):
                 for idx, target_index in enumerate(batched_item):
                     try:
                         target_word = toks[target_index - 1]
-                        prompt = annotation_prompt(sentence, adj_lang, target_word)
+                        prompt = get_prompt(sentence, adj_lang, target_word)
                         batch_prompts.append(prompt)
                     except IndexError:
                         print(f"Error: Index {target_index} out of bounds in batched item. Skipping.")
 
                 if not batch_prompts:
-                    continue  # Skip if no valid prompts
+                    continue
 
                 batch_predictions = generate_aya_original(batch_prompts, model, tokenizer)
-                if len(batch_predictions) != len(batch_prompts):
-                    print('Error in batch else')
                 sentence_predictions.extend(batch_predictions)
         else:
             batch_prompts = []
             for idx, target_index in enumerate(targets):
                 try:
                     target_word = toks[target_index - 1]
-                    prompt = annotation_prompt(sentence, adj_lang, target_word)
+                    prompt = get_prompt(sentence, adj_lang, target_word)
                     batch_prompts.append(prompt)
                 except IndexError:
                     print(f"Error: Index {target_index} out of bounds in batched item. Skipping.")
@@ -167,7 +165,7 @@ def annotate_in_batches(file_name, lang, set_split, model, tokenizer):
     to_delete = []
 
     for n, i in enumerate(ud._sentences):
-        if False in find_delete(i):
+        if find_delete(i) is True:
             to_delete.append(n)
 
     to_delete.reverse()
@@ -231,7 +229,7 @@ def process_lang(files, output_dir, langs, model, tokenizer):
 
 def main():
     PARSER = argparse.ArgumentParser('Animacy annotation of UD.')
-    PARSER.add_argument('--input_file', type=str, required=True, help="Path to the input UD file")
+    PARSER.add_argument('--input_file', type=str, required=True, help="Path to the input UD directory. See https://lindat.mff.cuni.cz/repository/xmlui/handle/11234/1-5787")
 
     args = PARSER.parse_args()
 

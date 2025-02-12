@@ -24,7 +24,7 @@ from utils import build_data
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-def generate_aya_original(prompts, model, tokenizer, batch_size=4, temperature=0.1, top_p = 1.0, top_k=0, max_new_tokens=10):
+def generate_aya_original(prompts, model, tokenizer, temperature=0.1, top_p = 1.0, top_k=0, max_new_tokens=10):
     def get_message_format(prompts):
         messages = []
         for p in prompts:
@@ -58,13 +58,15 @@ def generate_aya_original(prompts, model, tokenizer, batch_size=4, temperature=0
                             ]
 
     gen_text = tokenizer.batch_decode(gen_tokens, skip_special_tokens=True)
-    def find_first_letter(response):
+
+    def get_prediction(response):
         for char in response:
             if char in ['A', 'N', 'H']:
                 return char
         return None
 
-    predictions = [find_first_letter(r) for r in gen_text]
+    # print('Gen text: ', gen_text)
+    predictions = [get_prediction(r) for r in gen_text]
 
     return predictions
 
@@ -77,7 +79,7 @@ def evaluate_model(model, tokenizer, lang, test_dataset, data_dir,  batch_size=3
         predictions = []
         for i in tqdm(range(0, len(test_inputs), batch_size), desc="Evaluating"):
             batch_inputs = test_inputs[i:i+batch_size]
-            batch_predictions = generate_aya_original(batch_inputs, model, tokenizer, batch_size)
+            batch_predictions = generate_aya_original(batch_inputs, model, tokenizer)
             predictions.extend(batch_predictions)
 
         #with open(os.path.join(data_dir, f'{lang}-prediction.txt'), 'w', encoding='utf-8') as o:

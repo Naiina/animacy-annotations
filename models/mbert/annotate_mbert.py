@@ -35,19 +35,19 @@ def compose_sft(lang):
 
 
 def find_delete(sentence):
-    VP = False
+    lack_VP = True
     verbs = []
     for token in sentence:
         if token.upos == 'VERB' or token.upos == 'AUX':
             verbs.append(token)
 
         if token.form is None:
-            return [False]
+            return True
 
     if verbs:
-        VP = True
+        lack_VP = False
 
-    return [VP]
+    return lack_VP
 
 
 def build_data(treebank):
@@ -82,33 +82,30 @@ def predict(model, data, tokenizer):
             truncation=True,
         )
 
-        word_spans = []
         target_spans = []
         w_tok_map = [(word, inputs[0].word_to_tokens(idx)) for idx, word in
                      enumerate(tokens[i])]  ## for each token: ('token', (int(start), int(end))
-        word_spans.append(w_tok_map)
+
         spans = [w_tok_map[idx - 1][1] for idx in
                  target_indexes[i]]  ## extract int(start) and int(end) for target indexes
         spans = list(sorted(spans))
         target_spans.append(spans)
 
-        def build_masks(targets, input_ids, number):
+        def build_mask(targets, input_ids):
             length = len(input_ids)
-            word_index_mask = [0] * length
-            labs = [-100] * length
+            labs_mask = [-100] * length
             for idx, span in enumerate(targets):
                 start, end = span
                 for i in range(start, end):
-                    word_index_mask[i] = idx + 1
-                    labs[i] = 0
-            return labs, word_index_mask
+                    labs_mask[i] = 0
+            return labs_mask
 
-        masks = [build_masks(sentence, inputs['input_ids'][index], index) for index, sentence in
-                 enumerate(target_spans)]
-        labs, words_index_mask = zip(*masks)
-        labs = list(labs)
+        labs_mask = [
+                 build_mask(sentence, inputs['input_ids'][index])
+                 for index, sentence in enumerate(target_spans)
+                ]
 
-        inputs['labels'] = torch.tensor(labs)
+        inputs['labels'] = torch.tensor(labs_mask)
 
         with torch.no_grad():
             output = model(**inputs)
@@ -130,22 +127,21 @@ def predict(model, data, tokenizer):
     return final_predictions
 
 
-def annotate(file, lang, set_split):
+def annotate(file, anim_model, tokenizer):
     ud = pyconll.load_from_file(file)
 
     to_delete = []
 
     for n, i in enumerate(ud._sentences):
-        if False in find_delete(i):
+        if find_delete(i) is True:
             to_delete.append(n)
 
-    to_delete.reverse()
+    to_delete.reverse() #avoid reindexing issues
     for n in to_delete:
         ud.__delitem__(n)
 
     data = build_data(ud)
 
-    anim_model, tokenizer = compose_sft(lang)
     prediction = predict(anim_model, data, tokenizer)
     prediction = [[label_dict[l] for l in sentence] for sentence in prediction]
     for i, s in enumerate(ud._sentences):
@@ -157,19 +153,7 @@ def annotate(file, lang, set_split):
 
     return ud
 
-
-def write_and_save_ud(ud, lang, set_split):
-    ud_name = f'{lang}-animacy-annotated-{set_split}.conllu'
-    otp_dir = f'animacy_annotated_uds_ms_xl/{lang}'
-    if not os.path.exists(otp_dir):
-        os.makedirs(otp_dir)
-
-    with open(os.path.join(otp_dir, ud_name), 'w', encoding='utf-8') as otp:
-        otp.write(ud.conll())
-        print(f'Processed {ud_name}')
-
-
-def write_and_save_ud(file, ud, lang, set_split, output_dir):
+def write_and_save_ud(file, ud, lang, output_dir):
     ud_name = os.path.basename(file)
     lang_dir = os.path.join(output_dir, lang)
     os.makedirs(lang_dir, exist_ok=True)
@@ -183,9 +167,8 @@ def process_lang(files, output_dir, langs, model, tokenizer):
     for file in files:
         lang = os.path.basename(file).split('_')[0]
         if lang in langs:
-            set_split = re.split(r'[-_.]', os.path.basename(file))[-2]
-            ud = annotate(file, lang, set_split)
-            write_and_save_ud(file, ud, lang, set_split, output_dir)
+            ud = annotate(file,  model, tokenizer)
+            write_and_save_ud(file, ud, lang, output_dir)
 
 
 def main():
@@ -245,6 +228,8 @@ def main():
         model, tokenizer = compose_sft(language_adjective_code[language])
         print(f'Processing {language} UD treebank.')
         process_lang(files, OUTPUT_DIRECTORY, langs, model, tokenizer)
+        del model
+        del tokenizer
 
 
 if __name__ == '__main__':
