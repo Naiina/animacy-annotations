@@ -1,3 +1,6 @@
+# Adapted from: CohereForAI/Aya-23-8B - Aya 23 Notebook
+# Source: https://huggingface.co/CohereForAI/aya-23-8B/blob/main/Aya_23_notebook.ipynb
+
 import os
 import random
 import argparse

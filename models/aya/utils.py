@@ -1,10 +1,9 @@
-def get_prompt(l):
-    return f"Classify the animacy of '{l['target_word']}' in the context of the following {l['lang']} sentence: '{l['sentence']}'. Use: H for Humans, A for Animate (non-human living organisms, such as plants or animals or ancestral creature), N for Inanimate. Respond with only one letter: H, A, or N.'"
-def annotation_prompt(l):
-    return f"Classify the animacy of the referent of the word '{l['target_word']}' in the context of the following {l['lang']} sentence: '{l['sentence']}. Respond with only one letter: H (Human, also for collectives inherently composed by human in the context), A (Animate), or N (Inanimate)."
-
 import logging
 import jsonlines
+def get_prompt(l):
+    return f''' Classify the animacy of the referent of the word '{l['target_word']}' in the context of the following {l['lang']} sentence: '{l['sentence']}. 
+                Respond with only one letter: H (Human, also for collectives inherently composed of humans), A (non-human living organisms, such as plants or animals or ancestral creature), or N (Inanimate).'''
+
 def build_data(jl_file, n_samples):
     logging.info(f"Processing file: {jl_file}")
     n_samples = n_samples if n_samples > 0 else float('inf')
