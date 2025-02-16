@@ -1,0 +1,65 @@
+{
+    "es": {
+        "sft": "cambridgeltl/mbert-lang-sft-es-small",
+        "data": {
+            "name": "animacy-es-nogroups-xtr-complete-filtered",
+            "test_split": null
+        }
+    },
+    "de": {
+        "sft": "cambridgeltl/mbert-lang-sft-de-small",
+        "data": {
+            "name": "animacy-de-nogroups-xtr-complete-filtered",
+            "test_split": null
+        }
+    },
+    "en": {
+        "sft": "cambridgeltl/mbert-lang-sft-en-small",
+        "data": {
+            "name": "animacy-en-nogroups-xtr-complete-filtered",
+            "test_split": null
+        }
+    },
+    "et": {
+        "sft": "cambridgeltl/mbert-lang-sft-et-small",
+        "data": {
+            "name": "animacy-et-nogroups-xtr-complete-filtered",
+            "test_split": null
+        }
+    },
+    "eu": {
+        "sft": "cambridgeltl/mbert-lang-sft-eu-small",
+        "data": {
+            "name": "animacy-eu-nogroups-xtr-complete-filtered",
+            "test_split": null
+        }
+    },
+    "fr": {
+        "sft": "cambridgeltl/mbert-lang-sft-fr-small",
+        "data": {
+            "name": "animacy-fr-nogroups-xtr-complete-filtered",
+            "test_split": null
+        }
+    },
+    "ja": {
+        "sft": "cambridgeltl/mbert-lang-sft-ja-small",
+        "data": {
+            "name": "animacy-ja-nogroups-xtr-complete-filtered",
+            "test_split": null
+        }
+    },
+    "ko": {
+        "sft": "cambridgeltl/mbert-lang-sft-ko-small",
+        "data": {
+            "name": "animacy-ko-nogroups-xtr-complete-filtered",
+            "test_split": null
+        }
+    },
+    "zh": {
+        "sft": "cambridgeltl/mbert-lang-sft-zh-small",
+        "data": {
+            "name": "animacy-zh-nogroups-xtr-complete-filtered",
+            "test_split": null
+        }
+    }
+}
