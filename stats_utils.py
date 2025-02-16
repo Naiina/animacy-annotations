@@ -2,6 +2,36 @@ from tqdm import tqdm
 from collections import defaultdict
 from conllu import parse
 
+first_person_pronouns = [
+    "私",  # watashi
+    "僕",  # boku
+    "俺",  # ore
+    "自分",  # jibun
+    "あたし",  # atashi
+    "私たち",  # watashi-tachi
+    "僕たち",  # boku-tachi
+    "俺たち",  # ore-tachi
+    "わし",  # washi
+    "わたくし",  # watakushi
+    "我",  # ware
+    "ウチ",  # uchi
+]
+
+second_person_pronouns = [
+    "あなた",  # anata
+    "君",  # kimi
+    "お前",  # omae
+    "あんた",  # anta
+    "あなたたち",  # anata-tachi
+    "君たち",  # kimi-tachi
+    "お前たち",  # omae-tachi
+    "先生",  # sensei (used as second-person pronoun informally)
+    "そちら",  # sochira (polite)
+    "おたく",  # otaku (informal)
+    "貴様",  # kisama (derogatory)
+    "てめえ",  # temee (very informal/derogatory)
+]
+
 
 def number_and_animacy(UD_file, max_len):
     data_UD = open(UD_file, "r", encoding="utf-8")
@@ -290,6 +320,7 @@ def noun_only_position_in_subtree(UD_file, rel=False, max_len=-1, pro=True, per=
     #      1           2                  3 
     data_UD = open(UD_file,"r", encoding="utf-8")
     dd_data_UD = parse(data_UD.read())
+    rows = []
     
     l_tags = []
     if pro:
@@ -312,8 +343,9 @@ def noun_only_position_in_subtree(UD_file, rel=False, max_len=-1, pro=True, per=
             dd_pos_anim = {ac: [] for ac in l_tags}
             for _, anim, deprel in z_sorted:
                 # Only main arguments
-                if anim in l_tags and deprel in ["nsubj", "obj", "iobj", "obl", "nsubj:pass", "obl:agent"]:
+                if anim in l_tags and sum(deprel.startswith(dr) for dr in ["nsubj", "obj", "iobj", "obl"]):
                     dd_pos_anim[anim].append(pos)
+                    rows.append([anim, pos])
                     pos+=1
             if rel:
                 if pos > 0:
@@ -327,7 +359,7 @@ def noun_only_position_in_subtree(UD_file, rel=False, max_len=-1, pro=True, per=
         else:
             d_pos_anim[k] = None
 
-    return (d_pos_anim)
+    return (d_pos_anim, rows)
 
 def acl_roots(UD_file,max_len, all_acl=False):
     #acl:relcl for languages where this exists
@@ -413,9 +445,10 @@ def animacy_and_voice(UD_file,max_len):
         l_head_anim_subj = {}
         l_head_anim_obj = {}
 
-        for d_word in l: 
-            
-            if d_word["upos"] == "NOUN":
+        for d_word in l:
+            if 'ja_gsd' in UD_file and d_word["form"] in first_person_pronouns + second_person_pronouns:
+                anim = "P"
+            elif d_word["upos"] == "NOUN":
                 anim = d_word["misc"]["ANIMACY"]
             elif "PRON" == d_word["upos"] and type(d_word["feats"]) == dict and "Person" in d_word["feats"] and d_word["feats"]["Person"] in ["1","2"]:
                 anim = "P"

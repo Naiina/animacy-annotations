@@ -5,8 +5,8 @@ import os
 from collections import defaultdict
 import matplotlib.pyplot as plt
 import seaborn as sns
-from statsmodels.formula.api import mnlogit
-from scipy.stats import chi2
+from scipy.stats import ttest_ind
+import itertools
 
 from stats_utils import (
     noun_only_position_in_subtree, 
@@ -17,8 +17,66 @@ from stats_utils import (
 
 sns.set_theme(style="whitegrid", font="Times New Roman", font_scale=2)
 
-
 def plot_number(ud_repo, max_len, output_repo):
+    files = os.listdir(ud_repo)
+    dfs = []
+    for file in files:
+        if file[:2] not in ["ja", "zh", "ko"]:
+            UD_file = os.path.join(ud_repo, file)
+            d_count, _ = number_and_animacy(UD_file, max_len)
+            df = pd.DataFrame.from_dict(d_count, orient='index')
+
+            # Calculate proportions
+            grand_total = df.values.sum()
+
+            # Calculate proportions
+            df = df / grand_total
+
+            # Reset index to get it in long form
+            df = df.reset_index().melt(id_vars='index', var_name='Animacy', value_name='Proportion')
+            df.columns = ['Number', 'Animacy', 'Proportion']
+            df = df[df['Proportion'] != 0]
+
+
+            # Calculate marginal probabilities
+            animacy_marginals = df.groupby('Animacy')['Proportion'].sum().reset_index()
+            animacy_marginals.columns = ['Animacy', 'Animacy_Prob']
+
+            deprel_marginals = df.groupby('Number')['Proportion'].sum().reset_index()
+            deprel_marginals.columns = ['Number', 'Number_Prob']
+
+            # Merge marginals with original DataFrame
+            df = df.merge(animacy_marginals, on='Animacy')
+            df = df.merge(deprel_marginals, on='Number')
+
+            # Compute PMI
+            df['PMI'] = np.log2(df['Proportion'] / (df['Animacy_Prob'] * df['Number_Prob']))
+
+            df['Language'] = file[:2]
+            # Replace inf with NaN
+            df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+            # Drop rows with NaN (or inf, now replaced with NaN)
+            df.dropna(inplace=True)
+            dfs.append(df)
+        
+    df = pd.concat(dfs, axis=0)
+    df = df[df['Number'] == 'Plur']
+    print(df)
+
+    sns.boxplot(
+            df, x="Animacy", y="PMI", hue="Animacy",
+            palette="vlag", whis=[0, 100], width=.6,
+            order=["P", "H", "A", "N"],
+        )
+    sns.stripplot(df, x="Animacy", y="PMI", size=4, color=".3", order=["P", "H", "A", "N"])
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_repo, "number_PMI.pdf"))
+    plt.show()
+
+
+def _plot_number(ud_repo, max_len, output_repo):
     animacy_classes = ["P", "H", "A", "N"]
     number_classes = ["Plur", "Sing"]
     l_lang = []
@@ -26,14 +84,12 @@ def plot_number(ud_repo, max_len, output_repo):
     l_num = []
     l_anim = []
     files = os.listdir(ud_repo)
-    all_stats = []
+    all_rows = []
     for file in files:
         if file[:2] not in ["ja", "zh", "ko"]:
             UD_file = os.path.join(ud_repo, file)
             d_count, rows = number_and_animacy(UD_file, max_len)
-            rows = [r + [file[:2]] for r in rows]
-            all_stats += rows
-
+            all_rows += [r + [file[:2]] for r in rows]
             totals = {ac: sum(d_count[nc][ac] for nc in number_classes) for ac in animacy_classes}
 
             for ac in animacy_classes:
@@ -45,23 +101,6 @@ def plot_number(ud_repo, max_len, output_repo):
                         l_prop += [d_count[nc][ac] / totals[ac]]
                     else:
                         l_prop += [0]
-    
-    # STATS
-    df = pd.DataFrame.from_dict(all_stats)
-    df.columns = ["Number", "Animacy", "Language"]
-    df = df[df['Animacy'] != 'P']
-    df['Number'] = df['Number'].replace(['Sing', 'Plur'], [0, 1])
-    df['Animacy'] = df['Animacy'].replace(['N', 'A', 'H'], [0, 1, 2])
-
-    # Adding language as categorical using C()
-    model1_sm = mnlogit('Number ~ Animacy', data=df).fit()
-
-    # Summary of the model
-    print(model1_sm.summary())
-
-    # Exponentiate the coefficients to get odds ratios
-    odds_ratios = np.exp(model1_sm.params)
-    print("\nOdds Ratios:\n", odds_ratios)
 
     # PLOT
     d = {"Language": l_lang, "Proportion": l_prop, "Number": l_num, "Animacy": l_anim}
@@ -77,10 +116,19 @@ def plot_number(ud_repo, max_len, output_repo):
     y='Proportion',
     hue='Language',
     style='Language',
-    ci=None,
+    errorbar='sd',
     palette='Set2',
-    linewidth = 3,
+    linewidth = 2,
     )
+    
+    # Calculate mean and standard deviation
+    means = df.groupby('Animacy')['Proportion'].mean().reset_index()
+    stds = df.groupby('Animacy')['Proportion'].sem().reset_index()
+    print(means)
+
+    # Plot mean and standard deviation
+    plt.errorbar(means['Animacy'], means['Proportion'], yerr=stds['Proportion'], fmt='o', c='black', lw=3, ms=6, marker='D')
+    
     plt.xlabel('Animacy')
     plt.ylabel('Proportion of Plurals')
     plt.xticks(rotation=45)
@@ -89,15 +137,31 @@ def plot_number(ud_repo, max_len, output_repo):
 
     plt.tight_layout()
     plt.savefig(os.path.join(output_repo, "number.pdf"))
-    plt.show()
+    
+    # Get unique animacy levels
+    animacy_levels = df['Animacy'].unique()
+
+    # Conduct pairwise Welch's t-tests
+    results = []
+    for level1, level2 in itertools.combinations(animacy_levels, 2):
+        group1 = df[df['Animacy'] == level1]['Proportion']
+        group2 = df[df['Animacy'] == level2]['Proportion']
+        t_stat, p_value = ttest_ind(group1, group2, equal_var=False)
+        results.append((level1, level2, t_stat, p_value))
+
+    # Print results
+    for level1, level2, t_stat, p_value in results:
+        print(f"Animacy {level1} vs {level2}: T-statistic = {t_stat}, P-value = {p_value}")
 
 
 def plot_position(UD_folder, max_len, output_folder):
     d_all = {}
+    all_rows = []
     for file in os.listdir(UD_folder):
         lang = file[:2]
         UD_file_ner = os.path.join(UD_folder, file)
-        d = noun_only_position_in_subtree(UD_file_ner, max_len=max_len)
+        d, rows = noun_only_position_in_subtree(UD_file_ner, max_len=max_len)
+        all_rows += [r + [lang] for r in rows]
         d_all[lang] = d
     
     df = pd.DataFrame.from_dict(d_all)
@@ -117,8 +181,17 @@ def plot_position(UD_folder, max_len, output_folder):
     style='Language',
     ci=None,
     palette='Set2',
-    linewidth = 3,
+    linewidth = 2,
     )
+
+    # Calculate mean and standard deviation
+    means = df.groupby('Animacy')['Order'].mean().reset_index()
+    stds = df.groupby('Animacy')['Order'].sem().reset_index()
+    print(means)
+
+    # Plot mean and standard deviation
+    plt.errorbar(means['Animacy'], means['Order'], yerr=stds['Order'], fmt='o', c='black', lw=3, ms=6, marker='D')
+    
     plt.xlabel('Animacy')
     plt.ylabel('Order in Clause')
     plt.xticks(rotation=45)
@@ -127,11 +200,87 @@ def plot_position(UD_folder, max_len, output_folder):
 
     plt.tight_layout()
     plt.savefig(os.path.join(output_folder, "order.pdf"))
-    plt.show()
+
+
+    # Get unique animacy levels
+    animacy_levels = df['Animacy'].unique()
+
+    # Conduct pairwise Welch's t-tests
+    results = []
+    for level1, level2 in itertools.combinations(animacy_levels, 2):
+        group1 = df[df['Animacy'] == level1]['Order']
+        group2 = df[df['Animacy'] == level2]['Order']
+        t_stat, p_value = ttest_ind(group1, group2, equal_var=False)
+        results.append((level1, level2, t_stat, p_value))
+
+    # Print results
+    for level1, level2, t_stat, p_value in results:
+        print(f"Animacy {level1} vs {level2}: T-statistic = {t_stat}, P-value = {p_value}")
 
 
 def plot_relativisation(UD_folder, max_len, output_folder):
+    dfs = []
+    for file in os.listdir(UD_folder):
+        lang = file[:2]
+        if lang not in ["eu", "ja"]:
+            UD_file_ner = os.path.join(UD_folder, file)
+        
+            l, d_tot = acl_roots(UD_file_ner,max_len)
+            d_count = {elem: {'Yes': l.count(elem), 'Not': (d_tot[elem] - l.count(elem))} for elem in ["P", "H", "A", "N"] if d_tot[elem] > 0}
+            df = pd.DataFrame.from_dict(d_count, orient='index')
+
+            # Calculate proportions
+            grand_total = df.values.sum()
+
+            # Calculate proportions
+            df = df / grand_total
+
+            # Reset index to get it in long form
+            df = df.reset_index().melt(id_vars='index', var_name='Animacy', value_name='Proportion')
+            df.columns = ['Animacy', 'Relativisation', 'Proportion']
+            df = df[df['Proportion'] != 0]
+
+            # Calculate marginal probabilities
+            animacy_marginals = df.groupby('Animacy')['Proportion'].sum().reset_index()
+            animacy_marginals.columns = ['Animacy', 'Animacy_Prob']
+
+            rel_marginals = df.groupby('Relativisation')['Proportion'].sum().reset_index()
+            rel_marginals.columns = ['Relativisation', 'Relativisation_Prob']
+
+            # Merge marginals with original DataFrame
+            df = df.merge(animacy_marginals, on='Animacy')
+            df = df.merge(rel_marginals, on='Relativisation')
+
+            # Compute PMI
+            df['PMI'] = np.log2(df['Proportion'] / (df['Animacy_Prob'] * df['Relativisation_Prob']))
+
+            df['Language'] = file[:2]
+            # Replace inf with NaN
+            df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+            # Drop rows with NaN (or inf, now replaced with NaN)
+            df.dropna(inplace=True)
+            dfs.append(df)
+        
+    df = pd.concat(dfs, axis=0)
+    df = df[df['Relativisation'] == 'Yes']
+    print(df)
+
+    sns.boxplot(
+            df, x="Animacy", y="PMI", hue="Animacy",
+            palette="vlag", whis=[0, 100], width=.6,
+            order=["P", "H", "A", "N"],
+        )
+    sns.stripplot(df, x="Animacy", y="PMI", size=4, color=".3", order=["P", "H", "A", "N"])
+
+    plt.tight_layout()
+    plt.savefig(os.path.join(output_folder, "relativisation_PMI.pdf"))
+    plt.show()
+
+
+def _plot_relativisation(UD_folder, max_len, output_folder):
     d = {}
+    all_rows = []
     for file in os.listdir(UD_folder):
         lang = file[:2]
         if lang not in ["eu", "ja"]:
@@ -140,6 +289,9 @@ def plot_relativisation(UD_folder, max_len, output_folder):
             l, d_tot = acl_roots(UD_file_ner,max_len)
             d[lang] = {elem: l.count(elem)/d_tot[elem] for elem in ["P", "H", "A", "N"] if d_tot[elem] > 0}
 
+            for elem in ["H", "A", "N"]:
+                all_rows += l.count(elem) * [[elem, 1, lang]]
+                all_rows += (d_tot[elem] - l.count(elem)) * [[elem, 0, lang]]
 
     df = pd.DataFrame.from_dict(d)
     df =df.rename_axis('Animacy').reset_index()
@@ -157,8 +309,17 @@ def plot_relativisation(UD_folder, max_len, output_folder):
     style='Language',
     ci=None,
     palette='Set2',
-    linewidth = 3,
+    linewidth = 2,
     )
+    # Calculate mean and standard deviation
+    means = df.groupby('Animacy')['Proportion'].mean().reset_index()
+    stds = df.groupby('Animacy')['Proportion'].sem().reset_index()
+    print(means)
+
+    # Plot mean and standard deviation
+    plt.errorbar(means['Animacy'], means['Proportion'], yerr=stds['Proportion'], fmt='o', c='black', lw=3, ms=6, marker='D')
+    
+
     plt.xlabel('Animacy')
     plt.ylabel('Proportion of Relativised Nominals')
     plt.xticks(rotation=45)
@@ -167,60 +328,133 @@ def plot_relativisation(UD_folder, max_len, output_folder):
 
     plt.tight_layout()
     plt.savefig(os.path.join(output_folder, "relativisation.pdf"))
-    plt.show()
+
+    # Get unique animacy levels
+    animacy_levels = df['Animacy'].unique()
+
+    # Conduct pairwise Welch's t-tests
+    results = []
+    for level1, level2 in itertools.combinations(animacy_levels, 2):
+        group1 = df[df['Animacy'] == level1]['Proportion']
+        group2 = df[df['Animacy'] == level2]['Proportion']
+        t_stat, p_value = ttest_ind(group1, group2, equal_var=False)
+        results.append((level1, level2, t_stat, p_value))
+
+    # Print results
+    for level1, level2, t_stat, p_value in results:
+        print(f"Animacy {level1} vs {level2}: T-statistic = {t_stat}, P-value = {p_value}")
 
 
-def plot_voice(UD_folder, max_len, output_folder):
-    
-    d_heatmap_data={}
-    l_lang = []
+def plot_voice(UD_folder, max_len, output_folder, plot_heatmap=False):
+    dfs = []
     for file in os.listdir(UD_folder):
         lang = file[:2]
         print(lang)
-        l_lang.append(lang)
         UD_file_ner = UD_folder+file
         d_count = animacy_and_voice(UD_file_ner, max_len)
-        new_d = defaultdict(lambda: defaultdict(int))
-        for deprel, d in d_count.items():
-            for anim, count in d.items():
-                if count:
-                    new_d[deprel][anim] = count / sum(d.values())
-                elif lang == 'ja' and anim == 'P' and deprel not in ['obl:agent', 'nsubj:pass']:
-                    new_d[deprel][anim] = 0
-                else:
-                    new_d[deprel][anim] = pd.NA
-        d_count = new_d
+        df = pd.DataFrame.from_dict(d_count, orient='index')
 
-        d_heatmap_data[lang] = d_count
+        # Calculate proportions
+        grand_total = df.values.sum()
+
+        # Calculate proportions
+        df = df / grand_total
+
+        # Reset index to get it in long form
+        df = df.reset_index().melt(id_vars='index', var_name='Animacy', value_name='Proportion')
+        df.columns = ['Deprel', 'Animacy', 'Proportion']
+        df = df[df['Proportion'] != 0]
+
+
+        # Calculate marginal probabilities
+        animacy_marginals = df.groupby('Animacy')['Proportion'].sum().reset_index()
+        animacy_marginals.columns = ['Animacy', 'Animacy_Prob']
+
+        deprel_marginals = df.groupby('Deprel')['Proportion'].sum().reset_index()
+        deprel_marginals.columns = ['Deprel', 'Deprel_Prob']
+
+        # Merge marginals with original DataFrame
+        df = df.merge(animacy_marginals, on='Animacy')
+        df = df.merge(deprel_marginals, on='Deprel')
+
+        # Compute PMI
+        df['PMI'] = np.log2(df['Proportion'] / (df['Animacy_Prob'] * df['Deprel_Prob']))
+
+        df['Language'] = lang
+        # Replace inf with NaN
+        df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+        # Drop rows with NaN (or inf, now replaced with NaN)
+        df.dropna(inplace=True)
+        dfs.append(df)
     
-    df = pd.concat({k: pd.DataFrame(v).T for k, v in d_heatmap_data.items()}, axis=0)
-    df = df.reset_index()
-    df.columns = ['Language', 'Deprel', 'P', 'H', 'A', 'N']
+    df = pd.concat(dfs, axis=0)
+    print(df)
 
-    df = pd.melt(df, id_vars=['Language', 'Deprel'], var_name='Animacy', value_name='Proportion')
-    df['Proportion'] = pd.to_numeric(df['Proportion'], errors='coerce')
+    mapping = {
+        "obl:agent": "obl:agent A",
+        "nsubj_A": "nsubj A",
+        "nsubj_S": "nsubj S",
+        "nsubj:pass": "nsubj:pass P",
+        "obj": "obj P"
+    }
+    column_order = list(mapping.values())
 
-    column_order = ["obl:agent", "nsubj_A", "nsubj_S", "nsubj:pass", "obj"]
+    # Replace the values in the 'Deprel' column
+    df['Deprel'] = df['Deprel'].replace(mapping)
 
-    # FacetGrid for each language
-    g = sns.FacetGrid(df, col='Language', col_wrap=6, height=4)
-    
-    def plot_func(data, **kwargs):
-        print(data)
-        sns.heatmap(
-            data.pivot_table(index='Animacy', columns='Deprel', values='Proportion', sort=False).reindex(column_order, axis=1),
-            cmap=sns.cm.rocket_r,
-            cbar=True,
-            vmin=0, vmax=1,  # Assuming proportions are between 0 and 1
-            **kwargs
-        )
+    if plot_heatmap:
+        vmin, vmax = df.PMI.min(), df.PMI.max()
+        # FacetGrid for each language
+        g = sns.FacetGrid(df, col='Language', col_wrap=6, height=4)
+        
+        def plot_func(data, colorbar_ax, **kwargs):
+            sns.heatmap(
+                data.pivot_table(index='Animacy', columns='Deprel', values='PMI', sort=False).reindex(column_order, axis=1),
+                cmap='coolwarm',
+                cbar_kws={'label': 'PMI'},
+                cbar=colorbar_ax is not None,
+                cbar_ax=colorbar_ax,  # Specify the shared colorbar axis
+                vmin=vmin, vmax=vmax,  # Assuming proportions are between 0 and 1
+                **kwargs
+            )
 
-    # Heatmap for each facet
-    g.map_dataframe(plot_func)
+        # Add an axis for the color bar on the right
+        cbar_ax = g.fig.add_axes([.90, .15, .02, .7])  # Adjust the position as needed
 
-    # Adjust layout
-    g.set_axis_labels("", "Animacy")
-    g.set_titles("{col_name}")
+        # Adjust the labels
+        for ai, ax in enumerate(g.axes):
+            title = g.col_names[ai]
+            ax.set_title(title, x=0.5, y=-0.3)
+            if ai < 6:
+                ax.xaxis.tick_top()
+                ax.xaxis.set_label_position('top')
+                ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha='center')
+            else:
+                ax.tick_params(axis='x', which='both', bottom=False, top=False, labelbottom=False)
+
+        # Map the data to the grid and plot with the shared colorbar ax only once
+        g.map_dataframe(plot_func, colorbar_ax=cbar_ax)
+
+        plt.tight_layout(rect=[0, 0, 0.85, 1])
+        g.set_axis_labels("", "Animacy")
+    else:
+        sns.set_theme(style="whitegrid", font="Times New Roman", font_scale=2)
+        g = sns.FacetGrid(df, col='Animacy', col_wrap=4, height=4)
+        
+        def plot_func(data, **kwargs):
+            ax = sns.boxplot(
+                data, y="Deprel", x="PMI", hue="Deprel",
+                palette="vlag", whis=[0, 100], width=.6, order=column_order, hue_order=column_order,
+                **kwargs
+            )
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=90, ha='center')
+            sns.stripplot(data, y="Deprel", x="PMI", size=4, color=".3", order=column_order, hue_order=column_order)
+
+        
+        g.map_dataframe(plot_func)
+        g.set_ylabels("PMI")
+
     plt.tight_layout()
     plt.savefig(os.path.join(output_folder, "voice.pdf"))
     plt.show()
