@@ -1,0 +1,151 @@
+sentence_id,language,text,tokens,animacy_labels,label_token_indexes,label_char_spans
+train-s815,eu,"Bof, primadera dun.",primadera,A,2,5-14
+train-s2875,eu,"ITALIAK, diotenez, ""Jainkoaren laguntza du"" Eurokopa honetan.",Jainkoaren|laguntza,A|N,5|6,20-30|31-39
+train-s3290,eu,Balizko igoeraren inguruan Iruñean sortu den giroarekin oso pozik azaldu zen atzo Miguel Angel Lotina entrenatzailea.,igoeraren|giroarekin|entrenatzailea,N|N|H,1|6|15,8-17|45-55|102-116
+train-s414,eu,Atzelariak ere ez ziren oso fin aritu.,Atzelariak,H,0,0-10
+train-s2417,eu,"Zaldi hura baino azkarragoa zen, bai, Fittipaldi!",Zaldi,A,0,0-5
+train-s1605,eu,Gizonak baditinagu.,Gizonak,H,0,0-7
+train-s2353,eu,Landarearen ingurua garbi edukitzea beharrezko da.,Landarearen|ingurua,A|N,0|1,0-11|12-19
+train-s4905,eu,"Beti giza saldoan txintxo bazabiltza inola berezitu gabe, gizarteak bere modura sarituko zaitu:",giza|saldoan|gizarteak,A|N|H,1|2|9,5-9|10-17|58-67
+train-s3975,eu,Beldurra ematen dioten bakarrak itsasertzetik hurbil dabiltzan marrazoak dira.,Beldurra|itsasertzetik|marrazoak,N|N|A,0|4|7,0-8|32-45|63-72
+train-s1359,eu,"Honezkero, Samoako morroiak eta aitak bereak eta bi izan dituzte etxean (imajina ezazue ehun kiloko morrosko bi elkarri lepoa bihurritu nahian), eta neskak moztea erabaki du.",morroiak|aitak|etxean|kiloko|morrosko|lepoa|neskak,A|H|N|N|A|N|H,3|5|11|16|17|20|26,19-27|32-37|65-71|93-99|100-108|120-125|149-155
+train-s4964,eu,"Gol aukera garbiena Javi Gonzalezek izan zuen 66 minutuan, baina Zorrotzakoaren jaurtiketak langan jo zuen.",Gol|aukera|minutuan|Zorrotzakoaren|jaurtiketak|langan,N|N|N|A|N|N,0|1|8|11|12|13,0-3|4-10|49-57|65-79|80-91|92-98
+train-s2702,eu,"Zugic kostaldeko Herceg Novi hiriko poliziaburua izan zen, eta ondoren hartu zuen ardura hori Podgorican.",kostaldeko|hiriko|poliziaburua|ardura,N|N|H|N,1|4|5|13,6-16|29-35|36-48|82-88
+train-s2041,eu,"Jardunaldiko ezustekoa, baina, emakumeetan egon zen:",Jardunaldiko|ezustekoa|emakumeetan,N|N|H,0|1|5,0-12|13-22|31-42
+train-s3136,eu,"(EH sinbolizatzeko, seguru, antzara hobeto dago; zisneak eta Wagnerri utzirik edo Txaikovskiri).",antzara|zisneak,A|A,6|10,28-35|49-56
+train-s3274,eu,"- Pepita eta Harum-El-Azah ezkondu egin ziren, San Antonio esaten diogun ermita txiki batean.",San|ermita,A|N,8|12,47-50|73-79
+train-s4304,eu,"Baina hitzaurreak azpimarratzen duenez, «Europako Kontseiluak uste du agiria hitzarmenean sartu beharko litzatekeela, indar legala izateko Europako Batasuneko agintarien gainean eta edozein herritarrek auzitegietara jotzeko oinarria izan dadin».",hitzaurreak|Kontseiluak|uste|agiria|hitzarmenean|indar|Batasuneko|agintarien|herritarrek|auzitegietara|oinarria,N|N|N|N|N|N|N|H|H|N|N,1|7|8|10|11|16|20|21|25|26|28,6-17|50-61|62-66|70-76|77-89|118-123|148-158|159-169|190-201|202-215|224-232
+train-s4238,eu,"Zenbait kidek - Erresuma Batuak, batez ere - ez dute onartzen estatuengan eragina izatea; Frantziak, Holandak eta Alemaniak, aldiz, indar legala eman nahi diote.",kidek|Erresuma|estatuengan|eragina|indar|nahi,H|N|H|N|N|N,1|3|12|13|24|27,8-13|16-24|62-73|74-81|132-137|150-154
+train-s1235,eu,Hurbiltzen hasi zirenean Kurt asaldatu egin zen azken hauetako bat Rollin komisarioa zela ikusi zuenean.,komisarioa,H,11,74-84
+train-s4575,eu,"Definizio ideal, utopiko eta prospektiboa da eta horra gizarte eta gizakia hurbildu behar dira, baina Lain Entralgoren ustean ez du azaltzen ""egokiro pertsonaren bizitzan osasuna deitzen duguna"".",Definizio|gizarte|gizakia|ustean|pertsonaren|bizitzan|osasuna,N|N|A|N|H|N|N,0|9|11|19|25|26|27,0-9|55-62|67-74|119-125|150-161|162-170|171-178
+train-s695,eu,"Atlantara irabaztera joan nintzen, Europako eta Munduko txapeldun izatetik netorren.",Munduko|txapeldun,N|H,7|8,48-55|56-65
+train-s4528,eu,"Ikurrinak han eta hemen ikusi ziren, eta batez ere elastiko erraldoi bat.",Ikurrinak|elastiko,A|A,0|10,0-9|51-59
+train-s1687,eu,Espezie saprofito hau arrunta da.,Espezie,A,0,0-7
+train-s4778,eu,"""Betidanik eta herrialde guztietan izan dira gizaki batzu, jakite ezkutu baten jabe zirela edo, izadi arauetatik kanpoko gertariak ekar omen zitzaketenak.",herrialde|gizaki|jakite|jabe|izadi|arauetatik|gertariak,N|A|N|H|N|N|A,3|7|10|13|17|18|20,15-24|45-51|59-65|79-83|96-101|102-112|121-130
+train-s124,eu,"Konposatuak, prozedura kimikoak erabiliz beste sinpleago batzuetan bana daitezkeen substantzia puruak dira, eta bakunak, berriz, metodo kimikoak erabiliz ere sinpleagoetan bana ezin daitezkeenak.",Konposatuak|prozedura|substantzia|metodo|ezin,N|N|N|N|A,0|2|10|19|25,0-11|13-22|83-94|129-135|177-181
+train-s551,eu,Gaztetan hostopean multzoka kokatutako ezkata berde itxurako harrak dira.,hostopean|ezkata|itxurako|harrak,N|N|N|A,1|4|6|7,9-18|39-45|52-60|61-67
+train-s1103,eu,"""Merienda Apotzaetxebarrin egiten zen, arraultz, txorixo eta sagardoarekin"".",Merienda|arraultz|txorixo|sagardoarekin,N|N|A|N,1|6|8|10,1-9|39-47|49-56|61-74
+train-s5331,eu,Diktaduran gertatutako urratzeen berri militarrek badutela esan dute giza eskubideen aldeko erakundeek.,Diktaduran|urratzeen|berri|giza|eskubideen|aldeko|erakundeek,N|N|N|A|N|N|N,0|2|3|8|9|10|11,0-10|23-32|33-38|69-73|74-84|85-91|92-102
+train-s4815,eu,Zama arintzeko proposamen bakarra nazioarteko batzorde batek Austriara joan eta bertako giza eskubideen egoerari buruzko txostena prestatzea izan zen.,Zama|proposamen|batzorde|giza|eskubideen|egoerari|txostena,N|N|H|A|N|N|N,0|2|5|11|12|13|15,0-4|15-25|46-54|88-92|93-103|104-112|121-129
+train-s1528,eu,korapiloak estutzen du.,korapiloak,A,0,0-10
+train-s4565,eu,Ingelesez idazten duten egile australiar horien artean zenbait ospetsuak dira nazioartean.,Ingelesez|egile|nazioartean,N|H|N,0|3|10,0-9|24-29|78-89
+train-s3996,eu,"Atlantako Apelazio Auzitegiak ez du debekua kenduko datozen 14 egunetan, Miamiko senideei epe hori eman baitzien atzo apelazioa aurkezteko.",Apelazio|Auzitegiak|debekua|egunetan|senideei|epe|apelazioa,N|N|N|N|H|N|N,1|2|5|9|12|13|18,10-18|19-29|36-43|63-71|81-89|90-93|118-127
+train-s1638,eu,"Sarri hurbiltzen zen ""haren"" landarera, Andreasen presentzia somatzen zuen, bizitzaz blaituriko haren pentsamenduak sentitzen zituen.",landarera|presentzia|bizitzaz|pentsamenduak,A|N|N|N,6|9|13|16,29-38|50-60|76-84|102-115
+train-s2125,eu,"Etorkinentzako programa berezirik ez badago ere, Estatu espainoleko hezkuntza-sistema nolakoa den eta titulazioak nola lor daitezkeen azalduko dugu, heziketa gizarteratzeko modu garrantzitsua da eta.",Etorkinentzako|programa|Estatu|espainoleko|hezkuntza-sistema|titulazioak|heziketa|modu,H|N|H|H|N|N|N|N,0|1|7|8|9|13|20|22,0-14|15-23|49-55|56-67|68-85|102-113|149-157|173-177
+train-s4907,eu,"Athletic nagusi zen zelaian baina Rojoren gizonen lanak ez zuen saririk, Urzaizek bitan eta Joseba Etxeberriak gol aukera garbiak izan arren.",zelaian|gizonen|lanak|saririk|gol|aukera,N|H|N|N|N|N,3|6|7|10|17|18,20-27|42-49|50-55|64-71|111-114|115-121
+train-s3977,eu,"Adierazpen hauek, nolanahi ere, ez dituzte itsas bazterretako jendetzen kezkak baretu.",Adierazpen|itsas|bazterretako|jendetzen|kezkak,N|N|N|H|N,0|8|9|10|11,0-10|43-48|49-61|62-71|72-78
+train-s2179,eu,"Beren ezagupide bereziez baliatuz, ahalmen bereziak ere bazituzten gizaki horiek:",ezagupide|ahalmen|gizaki,N|N|A,1|5|9,6-15|35-42|67-73
+train-s1449,eu,- Zurtoinak sendotu eta gaitzekiko erresistentzia hobetu egiten da.,Zurtoinak|gaitzekiko|erresistentzia,A|N|N,1|4|5,2-11|24-34|35-49
+train-s1407,eu,"Bizkaiko, Gipuzkoako eta Kantabriako alturako eta baxurako arrantzaleek bilera izan zuten atzo Donostian.",alturako|baxurako|arrantzaleek|bilera,N|N|H|N,5|7|8|9,37-45|50-58|59-71|72-78
+train-s1916,eu,"Jose Mari Olazabal da Sun City Golf torneoko lider, Lee Westwoodekin berdinduta.",Golf|torneoko|lider,N|N|H,6|7|8,31-35|36-44|45-50
+train-s3388,eu,Teknika hau landareek ere erabili dute (esate baterako oteak).,Teknika|landareek|esate|oteak,N|A|N|A,0|2|7|9,0-7|12-21|40-45|55-60
+train-s5021,eu,"Komisarioaren arabera, Javier Solana arduradunak Batzordearen lana nahasi egin du, eta bi erakundeen artean ""tentsio instituzionalak"" sortu dira.",Komisarioaren|arduradunak|Batzordearen|lana|erakundeen|tentsio,H|H|N|N|N|N,0|5|6|7|14|17,0-13|37-48|49-61|62-66|90-100|109-116
+train-s3893,eu,LANCE ARMSTRONG txirrindulari estatubatuarrari eman diote kiroletako Asturiasko Printzea saria.,txirrindulari|kiroletako|Printzea|saria,H|N|H|N,2|6|8|9,16-29|58-68|80-88|89-94
+train-s276,eu,"Zenbait arazoren ondorioz, hori ez da gauzatu, eta espiritu hori berreskuratzeko saioa egin behar litzateke.",arazoren|ondorioz|espiritu|saioa|behar,N|N|A|N|N,1|2|10|13|15,8-16|17-25|51-59|81-86|92-97
+train-s4371,eu,"Haroren aurkako partidu horretarako Asier Salcedoren baja bakarrik izango du Manek, gasteiztarrak tendinitisa baitu ezker hankako Akilesen tendoian.",partidu|baja|Manek|tendinitisa|hankako|tendoian,N|N|H|N|N|N,2|6|10|13|16|18,16-23|53-57|77-82|98-109|122-129|139-147
+train-s3348,eu,"Plastikozko poltsa batean goroldio hezea eta lur-nahaste bat jarri, zauriaren inguruan goi eta behean loturik.",Plastikozko|poltsa|goroldio|lur-nahaste|zauriaren|goi|behean,N|N|A|N|N|N|N,0|1|3|6|10|12|14,0-11|12-18|26-34|45-56|68-77|87-90|95-101
+train-s740,eu,"pertsonaia batzuk daude, istorio bat kontatzen da, baina errealitateko puskak dira denak.",pertsonaia|istorio|errealitateko|puskak,A|N|N|N,0|4|10|11,0-10|25-32|57-70|71-77
+train-s375,eu,"Lorea duten landareak lorontzi txikietan eduki behar dira eta birlandatuz gero, diametroa 2 edo 3 cm handiagoa duen lorontzia aukeratu.",Lorea|landareak|lorontzi|behar|diametroa|lorontzia,N|A|N|N|N|N,0|2|3|6|12|19,0-5|12-21|22-30|47-52|80-89|116-125
+train-s1244,eu,"""Amak egunero orrazten nau eta gaur, ilea atzera bilduta daramat"".",Amak|ilea|atzera,H|N|N,1|8|9,1-5|37-41|42-48
+train-s2301,eu,"Gizonak argal egoten gara, gizentzen dira txerriak.",Gizonak|txerriak,H|A,0|7,0-7|42-50
+train-s3882,eu,"Peter Robinson DUPeko bigarren buruak eta Eskualde Garapenerako ministroak astearte gauean jakinarazi zuenez, bere taldeak mozio bat aurkeztuko du Ipar Irlandako Asanblean Sinn Fein Gobernutik kanporatzeko.",buruak|Eskualde|Garapenerako|ministroak|astearte|gauean|taldeak|mozio|Ipar|Asanblean|Gobernutik,H|N|N|H|N|N|N|N|N|N|N,4|6|7|8|9|10|15|16|20|22|25,31-37|42-50|51-63|64-74|75-83|84-90|115-122|123-128|147-151|162-171|182-192
+train-s5240,eu,"C.K. Foong kapitainaren arabera onik atera zen istriputik, beste 15 lagunekin batera, hegazkinak objektu batekin egin zuen talka aireratzen ari zenean.",kapitainaren|istriputik|lagunekin|hegazkinak|objektu|talka,H|N|H|N|N|N,2|7|11|14|15|19,11-23|47-57|68-77|86-96|97-104|123-128
+train-s1832,eu,Bertan animalia hauek ikus ditzakegu:,animalia,A,1,7-15
+train-s2036,eu,Landarea dagoeneko lurra hezea egongo da.,Landarea|lurra,A|N,0|2,0-8|19-24
+train-s3129,eu,"Paraleloki, irakasleen lana jasotzeko datu base baten diseinua burutzen ari gara.",irakasleen|lana|datu|base|diseinua,H|N|N|N|N,2|3|5|6|8,12-22|23-27|38-42|43-47|54-62
+train-s3395,eu,"Lehor-lurreko laborantza (garagarra eta garia) da orain, ureztapeneko laborantzaren gainetik, ekonomi iharduera nagusia.",Lehor-lurreko|laborantza|garagarra|garia|ureztapeneko|laborantzaren|ekonomi|iharduera,N|N|A|A|N|N|N|N,0|1|3|5|10|11|14|15,0-13|14-24|26-35|40-45|57-69|70-83|94-101|102-111
+train-s460,eu,Ez da espezie arrunta Euskal Herrian.,espezie|Euskal|Herrian,A|N|N,2|4|5,6-13|22-28|29-36
+train-s5339,eu,"Hainbat eleberriren egilea da - dozenatik gora - eta horien artean Itsas barneko emakumea, Odol gorria eta aipatua dugun Schindlerren untzia dira.",eleberriren|egilea|dozenatik|Itsas|barneko|emakumea|Odol|untzia,N|H|N|N|N|H|N|A,1|2|5|11|12|13|15|21,8-19|20-26|32-41|67-72|73-80|81-89|91-95|134-140
+train-s1880,eu,"Herenegun Azkoitiko sanandresetan aritu ziren lau protagonista berberak arituko dira partidu nagusian, baina atzelariak aldatuta.",sanandresetan|protagonista|partidu|atzelariak,N|A|N|H,2|6|10|14,20-33|50-62|85-92|109-119
+train-s4329,eu,"Kantuetako batean Maiderrek maitasunezko bere amets bat kontatzen du; beste batean, berriz, pertsona bat jadanik hamaika urtez berarengandik urruti bizi delako pena azaltzen.",Kantuetako|maitasunezko|amets|pertsona|urtez|pena,N|N|N|H|N|N,0|3|5|15|19|24,0-10|28-40|46-51|92-100|121-126|160-164
+train-s4137,eu,Alemania protagonismo handiagoa eskatzen ari da biztanle kopurua argudiatuta eta zuzen dago.,protagonismo|biztanle|kopurua,N|H|N,1|6|7,9-21|48-56|57-64
+train-s2298,eu,Sehia dun.,Sehia,A,0,0-5
+train-s2761,eu,"Baina galiziarrak atsegina izan nahi du eta adierazi nahi dio oraindik ez dela ordua, aitortzeko garaiz dabilela.",galiziarrak|nahi|nahi|ordua,H|N|N|N,1|4|8|13,6-17|32-36|53-57|79-84
+train-s3578,eu,"Lurra berritzeko, salgai dauden lur-nahaste bereziak erabiltzen ez baditugu, hona hemen landare gehienentzako egin dezakegun nahaste egokiena:",Lurra|salgai|lur-nahaste|landare|nahaste,N|N|N|A|N,0|3|5|13|17,0-5|18-24|32-43|88-95|125-132
+train-s2460,eu,"Kaxoiak zabalik zeuden, eta haietatik asko lurrean edozelan botata.",Kaxoiak|lurrean,A|N,0|7,0-7|43-50
+train-s4550,eu,"Gaur hartuko du Gasteizko taldeak horri buruzko erabakia, eta, oraindik ezer onartu ez duten arren, hainbat aukera aztertzen ari dira.",taldeak|erabakia|aukera,N|N|N,4|7|19,26-33|48-56|108-114
+train-s5262,eu,44 urte ditu eta 1990etik da Lehen Mailako epailea.,urte|Mailako|epailea,N|N|H,1|7|8,3-7|35-42|43-50
+train-s526,eu,"Joan den asteko entrenamendu batean atera zuten Balea izeneko maskota Aguilera zelaira, eta azken ukituak eman zizkioten.",asteko|entrenamendu|Balea|izeneko|maskota|zelaira|ukituak,N|N|A|A|A|N|N,2|3|7|8|9|11|15,9-15|16-28|48-53|54-61|62-69|79-86|98-105
+train-s2220,eu,Rifondazione Comunista alderdi politikoak amnistia emateko proposamena aurkeztu du Italiako Legebiltzarrean kartzeletako arazoari irtenbide bat eman nahian.,alderdi|amnistia|proposamena|Legebiltzarrean|kartzeletako|arazoari|irtenbide|nahian,H|N|N|N|N|N|N|N,2|4|6|10|11|12|13|16,23-30|42-50|59-70|92-107|108-120|121-129|130-139|149-155
+train-s2786,eu,"Animalia batzuek, ingurune konkretu batean ezkutatu ahal izateko, bere gorputza aldatu dute.",Animalia|ingurune|ahal|gorputza,A|N|N|N,0|3|7|11,0-8|18-26|52-56|71-79
+train-s3832,eu,NAFARROAKO ITZULIKO hirugarren etapan eguraldi txarra izan zen protagonista nagusia.,ITZULIKO|etapan|eguraldi|protagonista,N|N|N|A,1|3|4|8,11-19|31-37|38-46|63-75
+train-s3215,eu,Vietnam eta atzerriko langile ugari ari da lanean uholdeek kaltetutakoei laguntzeko.,atzerriko|langile|lanean|uholdeek,N|H|N|N,2|3|7|8,12-21|22-29|43-49|50-58
+train-s767,eu,- Loreek gutxi irauten dute.,Loreek,A,1,2-8
+train-s2548,eu,"Nire anpuluak ibai bat sortu zuen eta ibai hori heriotzaren itsasoan, itsasoratu zen.",anpuluak|ibai|ibai|heriotzaren|itsasoan,A|N|N|N|N,1|2|7|9|10,5-13|14-18|38-42|48-59|60-68
+train-s2723,eu,"Azken denboraldi honen hasieran jokalari berri asko fitxatu ziren, eta taldearen muina mantentzeko erabakia hartu badut, horiek eman dezaketen guztia ateratzeko da.",denboraldi|hasieran|jokalari|taldearen|muina|erabakia,N|N|H|N|N|N,1|3|4|11|12|14,6-16|23-31|32-40|71-80|81-86|99-107
+train-s148,eu,"Kaktusetan, adibidez, drenajea errazteko legar-kopurua handiagotu edo hartxintxarra gehituko dugu.",Kaktusetan|drenajea|legar-kopurua|hartxintxarra,A|N|N|N,0|4|6|9,0-10|22-30|41-54|70-83
+train-s86,eu,"Itxura batean, batzuk eta besteak aldenduta, hobeto hezi daitezke bai neskak eta bai mutilak.",Itxura|neskak|mutilak,N|H|H,0|12|15,0-6|70-76|85-92
+train-s2763,eu,"Batzordeko iturriek azken urtetako legatzaren ""beherakada etengabea"" aipatzeaz gain ""arrai heldu gutxiren presentzia nahiz ugalketaren jaitsiera nabarmena"" azpimarratu zuten.",Batzordeko|iturriek|urtetako|legatzaren|beherakada|gain|arrai|presentzia|ugalketaren|jaitsiera,N|N|N|N|N|N|A|N|N|N,0|1|3|4|6|10|12|15|17|18,0-10|11-19|26-34|35-45|47-57|79-83|85-90|106-116|123-134|135-144
+train-s178,eu,- Zakurrak debekatuak dira igeritokian!,Zakurrak|igeritokian,A|N,1|4,2-10|27-38
+train-s5179,eu,Etxe barruan erabiltzen ditugun landare gehienak tropiko inguruetan dute beren jatorria eta negutegietan haziak dira.,Etxe|landare|tropiko|jatorria|negutegietan,N|A|N|N|N,0|4|6|10|12,0-4|32-39|49-56|79-87|92-104
+train-s2055,eu,"""Begira nola utzi nauzun, txo!",txo,A,6,26-29
+train-s2625,eu,"Beraiek irabazten dutena, aldiz, diru kopuru izugarria da, kaleko entrepresekin berebiziko kontratuak dituztelarik.",diru|kopuru|kaleko|entrepresekin|kontratuak,N|N|N|H|N,6|7|11|12|14,33-37|38-44|59-65|66-79|91-101
+train-s1254,eu,Ama entzuten geratu zen:,Ama,H,0,0-3
+train-s3740,eu,Hori frogatzeko Gasteizko Udaleko ordezkariak Mendizorrotzan bertan izan ziren atzo goizean eta gustura geratu ziren lanen emaitzarekin.,Udaleko|ordezkariak|goizean|lanen|emaitzarekin,N|H|N|N|N,3|4|10|15|16,26-33|34-45|84-91|117-122|123-135
+train-s2118,eu,LURRA ARGALDU.,LURRA,A,0,0-5
+train-s3904,eu,"NSK-k Gaztela eta Leongo Juntara bidalitako txostenaren arabera, ""urlandaren eta arrainengan isotopo erradiaktiboak aurkitu dira"".",Juntara|txostenaren|urlandaren|arrainengan|isotopo,N|N|N|A|N,4|6|10|12|13,25-32|44-55|66-76|81-92|93-100
+train-s5250,eu,"Zenbait igelek, esate baterako, beren gorputza puztu egiten dute direna baino haundiagoak direla erakutsiz.",igelek|esate|gorputza,A|N|N,1|3|7,8-14|16-21|38-46
+train-s3591,eu,Strange Days ilun eta iradokitzailearen zuzendariak Jeane eta Marenen maitasun istorio zaurituak paraleloki kontatzen ditu; etengabe iraganarera garamatzaten flash-back gordinez oraina zarramazkatuz.,Strange|Days|iradokitzailearen|zuzendariak|maitasun|istorio|iraganarera|flash-back|oraina,N|N|H|H|N|N|N|N|N,0|1|4|5|9|10|17|19|21,0-7|8-12|22-39|40-51|70-78|79-86|133-144|158-168|178-184
+train-s384,eu,- dio aitak irriño batekin -.,aitak|irriño,H|A,2|3,6-11|12-18
+train-s462,eu,"Eta goian dago idatzita, alegia, salba ditzagun baleak, salba dezagun gure hizkuntza.",goian|baleak|hizkuntza,N|A|N,1|9|14,4-9|48-54|75-84
+train-s111,eu,"Pertsona batekin imajinatzen zenuen hurbiltasun xamurretik urruntzea, latza da.",Pertsona|hurbiltasun,H|N,0|4,0-8|36-47
+train-s2538,eu,"Beraz, taldearen muina mantendu egingo da.",taldearen|muina,A|N,2|3,7-16|17-22
+train-s4467,eu,Orduan Francine gizonaren begietaz arduratu zen.,gizonaren|begietaz,H|N,2|3,16-25|26-34
+train-s1410,eu,"Begiak ireki ahala, asaldatu egin zen, aldamenean oilorik ikusi ez zuelako.",Begiak|aldamenean|oilorik,N|N|A,0|8|9,0-6|39-49|50-57
+train-s587,eu,"Eta pena ematen dit gainera, baleen etsairik amorratuenak geu izan garela jakiteak.",pena|baleen,N|H,1|6,4-8|29-35
+train-s980,eu,"""Entzun, entzun, lore urdin...""?",lore,A,5,17-21
+train-s180,eu,"Arrosa guztiak hil ziren, ekaitzak gainditu zituen.",Arrosa|ekaitzak,A|N,0|5,0-6|26-34
+train-s2072,eu,"Azken atal honetan, zuzendaritza karguak berriztatzeko prozesua azpimarratu du, kongresuko berrikuntza nabarmenetako bat emakumezkoak nahiz gazteak sindikatuko goreneko egituretan sartzea izango baita.",atal|zuzendaritza|karguak|prozesua|kongresuko|berrikuntza|emakumezkoak|gazteak|sindikatuko|egituretan,N|N|N|N|N|N|H|H|N|N,1|4|5|7|11|12|15|17|18|20,6-10|20-32|33-40|55-63|80-90|91-102|121-133|140-147|148-159|169-179
+train-s2931,eu,"Tolosako lider aparta da, erasoko fase guztiak berak erabakitzen ditu, eta gaur ere erakutsi nahiko ditu bere dohainak.",lider|erasoko|fase|dohainak,H|N|N|N,1|5|6|19,9-14|26-33|34-38|110-118
+train-s2342,eu,"Ikerketatik ateratzen dituen datuetatik prozesu bat irekiko duela espero da, hilketa hauen arduradunak auzipetzeko.",Ikerketatik|datuetatik|prozesu|espero|hilketa|arduradunak,N|N|N|N|N|H,0|3|4|8|11|13,0-11|29-39|40-47|66-72|77-84|91-102
+train-s5169,eu,"""Egoera oso polita da"", esan du Lotina gorritxoen entrenatzaileak, baina hala ere Oronozera eraman zituen atzo bere jokalariak, lasaitasuna bilatzeko asmoz.",Egoera|gorritxoen|entrenatzaileak|jokalariak|lasaitasuna|asmoz,N|N|H|H|N|N,1|10|11|21|23|25,1-7|39-49|50-65|116-126|128-139|150-155
+train-s2494,eu,Jadanik ideiak argi dituela aurreratu zuen entrenatzaileak.,ideiak|entrenatzaileak,N|H,1|6,8-14|43-58
+train-s3674,eu,"""Etxe barruan hiltzen diren landareetatik %90 gehiegi ureztatzeagatik izaten da"".",Etxe|landareetatik,N|A,1|5,1-5|28-41
+train-s4022,eu,"Entrenamendu ostean, Lotinak 5-3-2koa baieztatu zuen, baina zein jokalari zelairatuko dituen ez zuen erabat argitu.",Entrenamendu|5-3-2koa|jokalari,N|N|H,0|4|10,0-12|29-37|65-73
+train-s3663,eu,"Gaspar Llamazaresek azaldu zuenez, ""giza izaeraren inguruan eszeptizismoa eragiten du honek.",giza|izaeraren|eszeptizismoa,A|N|N,6|7|9,36-40|41-50|60-73
+train-s4724,eu,Floridako 25 ordezkari nagusiak noren alde izango diren trenkatzeko gorabeherak milioika telebista ikusleren aurrean egiten jarraitzen dute.,ordezkari|gorabeherak|telebista|ikusleren,H|N|N|H,2|9|11|12,13-22|68-79|89-98|99-108
+train-s4350,eu,"Baina XVI. mendetik aurrera Bizkaian, Araban eta Nafarroan sagarrondoak gutxitu egin ziren, eta Gipuzkoan, berriz, indartu.",mendetik|sagarrondoak,N|A,2|9,11-19|59-71
+train-s5045,eu,"Buffonek selekzioan titulartasuna kendu izana ez du ondo irentsi Inter Milaneko atezainak, eta uko egin zion Eurokopari:",selekzioan|titulartasuna|atezainak|uko,N|N|H|N,1|2|11|14,9-19|20-33|80-89|95-98
+train-s3043,eu,"Horretarako, Nazio Batuek iragarri dute Gobernu berriak errolda irekiko duela serbiarrek izena eman dezaten, eta hiru komunitate serbiarretan berriro deituko dituztela bozak.",Nazio|Gobernu|errolda|serbiarrek|izena|komunitate|bozak,H|N|N|H|N|H|N,2|6|8|11|12|18|23,13-18|40-47|56-63|78-88|89-94|118-128|168-173
+train-s792,eu,IV. mendeko San Sergio eliza estilo bizantziarraren adierazgarri garrantzitsua da.,mendeko|San|eliza|estilo|adierazgarri,N|A|N|N|N,1|2|4|5|7,4-11|12-15|23-28|29-35|52-64
+train-s2409,eu,Landarearen zati bigunak erasotzen dituzte.,Landarearen|zati,A|N,0|1,0-11|12-16
+train-s235,eu,Sukurtsal batzuetan langileak ezkutatu eta bezeroari deika jarduten diote katxondeo gorrian.,Sukurtsal|langileak|bezeroari|katxondeo,N|H|H|N,0|2|5|9,0-9|20-29|43-52|74-83
+train-s5051,eu,"- Ordu zehatza poliziek jakingo dute, baina guk laurak aldera aurkitu genuen.",Ordu|poliziek,N|H,1|3,2-6|15-23
+train-s849,eu,"ERAUNTSI garaiotan analistek sarri gomendatzen dute enpresa handia eta ""betikoa"", argindar sektorean kasu, babeslekutzat.",ERAUNTSI|garaiotan|analistek|enpresa|argindar|sektorean|kasu|babeslekutzat,N|N|H|N|N|N|N|N,0|1|2|6|13|14|15|17,0-8|9-18|19-28|52-59|82-90|91-100|101-105|107-120
+train-s2062,eu,"Ez die arnasik ematen kontrarioei, ez ikusleei.",arnasik|kontrarioei|ikusleei,N|H|H,2|4|7,7-14|22-33|38-46
+train-s4855,eu,Aurrelariak dira protagonista partidua baino lehen.,Aurrelariak|protagonista|partidua,H|A|N,0|2|3,0-11|17-29|30-38
+train-s3627,eu,"PPk, galdera horretan, ""kezka"" agertzen du, euskal gazteriako ""sektore jakin batzuen"" eta ""jazarpenezko indarkeria deitzen dutenaren protagonisten edota ETAko kideen"" artean lotura dagoela esanez.",galdera|kezka|euskal|gazteriako|sektore|jazarpenezko|indarkeria|protagonisten|kideen|artean|lotura,N|N|H|H|N|N|N|A|H|N|N,2|6|11|12|14|20|21|24|27|29|30,5-12|24-29|44-50|51-61|63-70|91-103|104-114|133-146|159-165|167-173|174-180
+train-s2219,eu,"Egun batean, azkenean jakin zuten nondik etorria zen landarea.",Egun|landarea,N|A,0|9,0-4|53-61
+train-s4281,eu,"""Gaur bakeroak eta monoa jantzi ditut jakaren azpian"".",bakeroak|monoa|jakaren,H|A|N,2|4|7,6-14|19-24|38-45
+train-s5385,eu,"Euskal Bizikletan egindako erakustaldiaren ondoren, Euskalteleko kirol zuzendari Julian Gorospek emaitza onak lortzeko moduan daudela uste du.",Euskal|Bizikletan|erakustaldiaren|kirol|zuzendari|emaitza|moduan|uste,N|N|N|N|H|N|N|N,0|1|3|7|8|11|14|16,0-6|7-17|27-42|65-70|71-80|97-104|119-125|134-138
+train-s296,eu,Arazo hau lauagoa da lurra pH edo azidotasun-neurri berezi batekoa behar duten landareekin.,Arazo|lurra|pH|azidotasun-neurri|behar|landareekin,N|N|N|N|N|A,0|4|5|7|10|12,0-5|21-26|27-29|34-51|67-72|79-90
+train-s2681,eu,"Maila handiko hiru proba hauetan, Tourreko zuzendariei urteko probarik garrantzitsuenean lekua badutela erakusten saiatuko dira.",Maila|proba|zuzendariei|urteko|probarik|lekua,N|N|H|N|N|N,0|3|7|8|9|11,0-5|19-24|43-54|55-61|62-70|89-94
+train-s1013,eu,Urkiolan San Antonio abadearen santutegi errenazentista dago.,San|abadearen|santutegi,A|H|N,1|3|4,9-12|21-30|31-40
+train-s1105,eu,Menditsua da eta baso eta larre ugari dago.,baso|larre,N|A,3|5,17-21|26-31
+train-s3849,eu,"Diputatuek ez zioten barkatu Baraki palestinarrei ""kontzesioak"" egiteko prest egon izana Camp Davideko (EEBB) bake elkarrizketetan.",Diputatuek|kontzesioak|bake|elkarrizketetan,H|N|N|N,0|7|18|19,0-10|51-62|110-114|115-130
+train-s90,eu,Ez primadera izan behar zunan.,primadera|behar,A|N,1|3,3-12|18-23
+train-s1420,eu,Enbutido batzuk oso gregarioak dira.,Enbutido|gregarioak,N|A,0|3,0-8|20-30
+train-s2204,eu,Oskolpeko intsektuak eztena landarean sartu eta izerdia landarea zimelduaraziko du.,Oskolpeko|intsektuak|eztena|landarean|izerdia|landarea,N|A|N|A|N|A,0|1|2|3|6|7,0-9|10-20|21-27|28-37|48-55|56-64
+train-s1467,eu,Kantauriko arraina bereiziko lukeen etiketa sortzea proposatu die Eusko Jaurlaritzak beste erkidegoei.,arraina|etiketa|Eusko|Jaurlaritzak|erkidegoei,A|N|N|N|H,1|4|8|9|11,11-18|36-43|66-71|72-84|91-101
+train-s3942,eu,Arrantzaleek bilera eta manifestazio bateratuak egingo dituzte Madrilen.,Arrantzaleek|bilera|manifestazio,H|N|N,0|1|3,0-12|13-19|24-36
+train-s4277,eu,Landareen inguruan hezetasuna lortzeko era asko ditugu:,Landareen|hezetasuna|era,A|N|N,0|2|4,0-9|19-29|39-42
+train-s4482,eu,Arrosei begira gelditu nintzen.,Arrosei,A,0,0-7
+train-s5167,eu,"AIren arabera, Israel giza eskubideak urratzen ari da Palestinako lurraldeetan azken hilabetean, eta baliteke gerra krimenak izatea urratze horiek.",giza|eskubideak|lurraldeetan|hilabetean|gerra|krimenak|urratze,A|N|N|N|N|N|N,4|5|10|12|16|17|19,22-26|27-37|66-78|85-95|110-115|116-124|132-139
+train-s5118,eu,Alonsok atzo eskainitako prentsaurrekoan ez zuen argitu turkiarra titular gisa ariko den.,prentsaurrekoan|turkiarra|titular,N|H|H,3|7|8,25-40|56-65|66-73
+train-s4602,eu,"Antzekoa izan zuen haien hautagaiak, Bob Dolek, duela lau urte Ross Peroten Erreformaren alderdiarekin.",hautagaiak|urte|Erreformaren|alderdiarekin,H|N|N|N,4|11|14|15,25-35|58-62|76-88|89-102
+train-s1090,eu,"hirukote, laukote... ere gorde egiten da?",hirukote|laukote,A|A,0|2,0-8|10-17
+train-s230,eu,"Kordoba eta Valdepeñasko etapetan hartu zuen oporralditxoa ahaztuta, temati agertu da Eolo jainko indartsua azken hiru egunetan eta gogor zigortu ditu tropeleko txirrindulariak.",etapetan|oporralditxoa|jainko|egunetan|tropeleko|txirrindulariak,N|N|A|N|N|H,3|6|13|17|22|23,25-33|45-58|91-97|119-127|151-160|161-176
+train-s4874,eu,"Wombata Australiako animalia martsupialo bat da, kangurua bezala.",animalia|kangurua,A|A,2|7,20-28|49-57
+train-s138,eu,"""Taldea ezagutuz, ezin nezake ezer erran.",Taldea|ezin,H|N,1|4,1-7|18-22
+train-s5117,eu,"Europako gaur egungo berrogei nazioetatik, lauk bakarrik onartu dute eta beren legedian txertatu Hizkuntza Errejional eta Gutxituen Europar Gutuna, Chouqc-ek kritikatu zuenez.",nazioetatik|legedian|Hizkuntza|Gutuna,H|N|N|N,4|12|14|19,30-41|79-87|97-106|140-146
+train-s3272,eu,"Bestetik, aurrekontuak luzatzea, alderdi politikoei aurrekontuei buruzko eztabaida egiteko aukera ""ostea"" dela adierazi zuen:",aurrekontuak|alderdi|aurrekontuei|eztabaida|aukera|ostea,N|H|N|N|N|N,2|5|7|9|11|13,10-22|33-40|52-64|73-82|91-97|99-104
+train-s5352,eu,"Hygrocybe gehienak bezala berankorra da, Azarotik aurrera ernetzen da neguko lehenengo hotzaldira arte, kare-lurretan eta mendiko larreetako belar artean.",Hygrocybe|Azarotik|neguko|hotzaldira|kare-lurretan|mendiko|larreetako|belar,A|N|N|N|N|N|N|A,0|6|10|12|15|17|18|19,0-9|41-49|70-76|87-97|104-117|122-129|130-140|141-146
+train-s2249,eu,"Lagunari zuzendu mezuak dituzu, ez buruzagiari.",Lagunari|mezuak|buruzagiari,H|N|H,0|2|6,0-8|17-23|35-46
+train-s3125,eu,Landare berri bat eskuratzerakoan merezi du zorrotz begiratzeak.,Landare|merezi,A|N,0|4,0-7|34-40
+train-s1616,eu,Homosexualek ere beren taldea daukate hemen.,taldea,A,3,23-29
+train-s2138,eu,"Landaretxoak lur-nahaste egokian landatu, toki epelean eduki eta puja berria sortu arte arin ureztatu.",Landaretxoak|lur-nahaste|toki|puja|arte,A|N|N|N|N,0|1|5|9|12,0-12|13-24|42-46|65-69|83-87
+train-s2180,eu,"Azkenean, Ligatik kentzea erabaki dute, eta zortzi taldek jarraituko dute.",Ligatik|taldek,N|A,2|9,10-17|51-57
+train-s359,eu,Oso zoriontsu sentitzen naiz; azkenik badut nik nahi nuen animalia.,nahi|animalia,N|A,8|10,48-52|58-66
+train-s945,eu,42 urte ditu eta oraindik puntako txirrindularia da.,urte|txirrindularia,N|H,1|6,3-7|34-48
+train-s522,eu,Normala da kanpoko taldeak presio handia pairatu behar izatea.,taldeak|presio|behar,A|N|N,3|4|7,19-26|27-33|49-54
+train-s4425,eu,"Kaxmirko talde ugarik baztertu zuten suetena berehala, eta Indiaren aurkako borrokarekin jarraituko zutela esan zuten.",talde|suetena|borrokarekin,A|N|N,1|5|11,9-14|37-44|76-88
