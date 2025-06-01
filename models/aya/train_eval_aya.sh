@@ -1,6 +1,6 @@
 #!/bin/bash
 
-ADAPTER='ayanimacy_lora'
+ADAPTER='aya-animacy'
 DATASET='aya_dataset'
 
 if [ ! -d "$DATASET" ]; then
