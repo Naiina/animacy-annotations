@@ -1,4 +1,5 @@
 # The Cross-linguistic Role of Animacy in Grammar Structures
+*Nina Gregorio, Matteo Gay, Sharon Goldwater, Edoardo M. Ponti*
 
 This repository contains the code for the paper **"The Cross-linguistic Role of Animacy in Grammar Structures"** (ACL Main 2025).  
 ## Abstract 
