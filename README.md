@@ -11,3 +11,8 @@ Furthermore, the behaviour of personal pronouns in the hierarchy is idiosyncrati
 - [**Multilingual BERT**, task-specific SFT](https://huggingface.co/lingvenvist/mbert-animacy)
 - [**Aya Expanse 8B**, LoRA adapter](https://huggingface.co/lingvenvist/mbert-animacy)
 - [**Animacy-annotated datasets** for all languages](https://huggingface.co/lingvenvist), derived from [XL-WSD](https://sapienzanlp.github.io/xl-wsd) (Pasini et al., 2021)
+
+## Morphosyntactic analysis
+- UD feature extraction in stats_utils.py
+- plots in anim_stats.py
+
